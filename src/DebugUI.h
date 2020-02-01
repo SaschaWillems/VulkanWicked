@@ -10,6 +10,7 @@
 #include "GameState.h"
 #include "GameInput.h"
 #include "Player.h"
+#include "Guardian.h"
 #include "PlayingField.h"
 #include "Renderer/VulkanTools.h"
 #include "Renderer/AssetManager.h"
@@ -48,6 +49,7 @@ private:
 	void updateGPUResources();
 public:
 	Player* player;
+	Guardian* guardian;
 	DebugUI();
 	~DebugUI();
 	void render();

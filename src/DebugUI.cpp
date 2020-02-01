@@ -321,11 +321,7 @@ void DebugUI::render()
 	ImGui::NewFrame();
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiSetCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
-	ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_None);
-	ImGui::Text("pos: %f %f", io.MousePos.x, io.MousePos.y);
-	ImGui::Text("pos: %f / %f / %f", player->position.x, player->position.y, player->position.z);
-	ImGui::Text("vel: %f / %f / l = %f", player->velocity.x, player->velocity.y, glm::length(player->velocity));
-	ImGui::Text("player state: %d", player->state);
+	ImGui::Begin("General info", nullptr, ImGuiWindowFlags_None);
 	ImGui::Text("phase: %s", gameState->phase == Phase::Day ? "day" : "night");
 	ImGui::Text("phaseT: %f", gameState->phaseTimer);
 	uint32_t pcount = 0;
@@ -337,7 +333,23 @@ void DebugUI::render()
 	ImGui::Text("projectiles (alive): %d (%d)", gameState->projectiles.size(), pcount);
 	ImGui::End();
 
-	ImGui::SetNextWindowPos(ImVec2(10, 250), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(25, 25), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("Player", nullptr, ImGuiWindowFlags_None);
+	ImGui::Text("Pos: %f / %f / %f", player->position.x, player->position.y, player->position.z);
+	ImGui::Text("Health: %f", player->health);
+	ImGui::Text("State: %d", (int32_t)player->state);
+	ImGui::End();
+
+	ImGui::SetNextWindowPos(ImVec2(40, 40), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("Guardian", nullptr, ImGuiWindowFlags_None);
+	ImGui::Text("Pos: %f / %f / %f", guardian->position.x, guardian->position.y, guardian->position.z);
+	ImGui::Text("Health: %f", guardian->health);
+	ImGui::Text("State: %d", (int32_t)guardian->state);
+	ImGui::End();
+
+	ImGui::SetNextWindowPos(ImVec2(55, 55), ImGuiSetCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("Functions", nullptr, ImGuiWindowFlags_None);
 	ImVec2 btnSize = ImVec2(100.0f, 25.0f);
@@ -421,7 +433,7 @@ void DebugUI::render()
 	}
 	ImGui::End();
 
-	ImGui::SetNextWindowPos(ImVec2(10, 250), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(70, 70), ImGuiSetCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("Game state settings", nullptr, ImGuiWindowFlags_None);
 	ImGui::PushItemWidth(110.0f);
