@@ -49,7 +49,7 @@ void init()
 	playingField->generate(35, 19);
 
 	player = new Player();
-	player->renderer = renderer;
+	player->setRenderer(renderer);
 
 	input = new GameInput();
 	input->addInputListener(game);
@@ -89,12 +89,7 @@ void buildCommandBuffer()
 	cb->bindDescriptorSets(renderer->getPipelineLayout("split_ubo"), { renderer->descriptorSets.camera, player->descriptorSet }, 0);
 	assetManager->getModel("plane")->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
 
-	cb->bindPipeline(renderer->getPipeline("player"));
-	cb->bindDescriptorSets(renderer->getPipelineLayout("split_ubo"), { renderer->descriptorSets.camera, player->descriptorSet }, 0);
-	assetManager->getModel("player_star")->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
-	if (player->state == PlayerState::Carries_Portal_Spawner) {
-		assetManager->getModel("portal_spawner_good")->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
-	}
+	player->draw(cb);
 
 	// Face
 	// @todo: Separate pipeline

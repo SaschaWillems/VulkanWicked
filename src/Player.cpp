@@ -103,7 +103,6 @@ void Player::updateGPUResources() {
 }
 
 void Player::update(float dT) {
-	updated = false;
 
 	if (firingCooldown > 0.0f) {
 		firingCooldown -= 0.1f;
@@ -156,5 +155,15 @@ void Player::update(float dT) {
 	}
 	if (rotation.y < -2.0f * M_PI) {
 		rotation.y = rotation.y + (2.0f * M_PI);
+	}
+}
+
+void Player::draw(CommandBuffer* cb)
+{
+	cb->bindPipeline(renderer->getPipeline("player"));
+	cb->bindDescriptorSets(renderer->getPipelineLayout("split_ubo"), { renderer->descriptorSets.camera, descriptorSet }, 0);
+	assetManager->getModel("player_star")->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
+	if (state == PlayerState::Carries_Portal_Spawner) {
+		assetManager->getModel("portal_spawner_good")->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
 	}
 }
