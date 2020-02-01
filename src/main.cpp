@@ -20,6 +20,7 @@
 #include "Renderer/VulkanRenderer.h"
 
 #include "Player.h"
+#include "Guardian.h"
 #include "PlayingField.h"
 
 #include "Game.h"
@@ -30,6 +31,7 @@
 
 Game* game;
 Player* player;
+Guardian* guardian;
 VulkanRenderer* renderer;
 
 std::chrono::time_point tStart = std::chrono::high_resolution_clock::now();
@@ -51,9 +53,15 @@ void init()
 	player = new Player();
 	player->setRenderer(renderer);
 
+	guardian = new Guardian();
+	guardian->setRenderer(renderer);
+
 	input = new GameInput();
 	input->addInputListener(game);
 	input->addInputListener(player);
+
+	game->player = player;
+	game->guardian = guardian;
 
 	std::srand((int)std::time(nullptr));
 
@@ -73,6 +81,7 @@ void init()
 	gameState->windowSize = glm::vec2(renderer->width, renderer->height);
 
 	debugUI->player = player;
+	debugUI->guardian = guardian;
 }
 
 void buildCommandBuffer()
@@ -90,6 +99,7 @@ void buildCommandBuffer()
 	assetManager->getModel("plane")->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
 
 	player->draw(cb);
+	guardian->draw(cb);
 
 	// Face
 	// @todo: Separate pipeline
@@ -181,6 +191,7 @@ void updateLights()
 	renderer->lightSources.numLights = 0;
 	renderer->lightSources.viewPos = glm::vec4(renderer->camera.position, 0.0f) * glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);
 	renderer->addLight(player->getLightSource());
+	renderer->addLight(guardian->getLightSource());
 	renderer->addLight(game->getPhaseLight());
 	for (auto projectile : gameState->projectiles) {
 		if (projectile.alive) {
@@ -212,13 +223,17 @@ int SDL_main(int argc, char* argv[])
 
 	assetManager->addModelsFolder("scenes");
 
+	guardian->setModel("guardian_black_sun");
+
 	game->prepareGPUResources();
 	debugUI->prepareGPUResources(renderer->pipelineCache, renderer->getRenderPass("deferred_composition"));
 	playingField->prepareGPUResources();
 	player->prepareGPUResources();
+	guardian->prepareGPUResources();
 
-	player->updateGPUResources();
 	renderer->camera.updateGPUResources();
+	player->updateGPUResources();
+	guardian->updateGPUResources();
 
 	bool minimized = false;
 	bool quit = false;
@@ -268,12 +283,14 @@ int SDL_main(int argc, char* argv[])
 			playingField->update(timeStep);
 			game->update(timeStep);
 			player->update(timeStep);
+			guardian->update(timeStep);
 		}
 	}
 
 	delete playingField;
 	delete game;
 	delete player;
+	delete guardian;
 	delete debugUI;
 	delete renderer;
 	delete input;
