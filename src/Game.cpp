@@ -126,6 +126,13 @@ void Game::updateProjectiles(float dT)
 						}
 					}
 				}
+				// Player projectiles damage guardian
+				// @todo: Guardian hit test precedence over spore hit test
+				if (guardian->alive() && guardian->hitTest(projectile.pos)) {
+					guardian->health -= gameState->values.playerProjectileGuardianDamage;
+					projectile.remove();
+					continue;
+				}
 				// Player projectiles turn evil spores temporarily into dead evil spores that can be taken over by good growth
 				Cell* cell = playingField->cellFromVisualPos(projectile.pos);
 				if (cell && cell->sporeType == SporeType::Evil) {

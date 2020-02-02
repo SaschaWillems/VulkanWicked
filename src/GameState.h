@@ -33,6 +33,7 @@ public:
 	float evilDeadSporeRessurectionSpeed = 0.5f;
 	float playerFiringCooldown = 2.0f;
 	float playerProjectileSpeed = 17.0f;
+	float playerProjectileGuardianDamage = 5.0f;
 };
 
 class GameState
