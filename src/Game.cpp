@@ -132,6 +132,7 @@ void Game::updateProjectiles(float dT)
 					cell->sporeType = SporeType::Evil_Dead;
 					cell->floatValue = gameState->values.evilDeadSporeLife;
 					projectile.remove();
+					continue;
 				}
 				}
 				break;
@@ -189,3 +190,52 @@ void Game::updateGPUResources()
 		projectilesUbo.copyTo(uniformdata.data(), uniformdata.size() * sizeof(glm::vec4));
 	}
 }
+
+void Game::spawnPlayer()
+{
+	glm::vec2 spawnPosition = glm::vec2(0.0f);
+	// Player spawns at random good portal
+	std::vector<Cell> spawnPoints;
+	for (uint32_t x = 0; x < playingField->width; x++) {
+		for (uint32_t y = 0; y < playingField->height; y++) {
+			Cell& cell = playingField->cells[x][y];
+			if (cell.sporeType == SporeType::Good_Portal) {
+				spawnPoints.push_back(cell);
+			}
+		}
+	}
+	if (!spawnPoints.empty()) {
+		int32_t index = randomInt(spawnPoints.size());
+		spawnPosition = spawnPoints[index].gridPos;
+		std::clog << "Spawning player at " << spawnPosition.x << " / " << spawnPosition.y << std::endl;
+	}
+	else {
+		std::cerr << "No spawn point found for player, spawning at center" << std::endl;
+	}
+	player->spawn(spawnPosition);
+}
+
+void Game::spawnGuardian()
+{
+	glm::vec2 spawnPosition = glm::vec2(0.0f);
+	// Guardian spawns at random evil portal
+	std::vector<Cell> spawnPoints;
+	for (uint32_t x = 0; x < playingField->width; x++) {
+		for (uint32_t y = 0; y < playingField->height; y++) {
+			Cell& cell = playingField->cells[x][y];
+			if (cell.sporeType == SporeType::Evil_Portal) {
+				spawnPoints.push_back(cell);
+			}
+		}
+	}
+	if (!spawnPoints.empty()) {
+		int32_t index = randomInt(spawnPoints.size());
+		spawnPosition = spawnPoints[index].gridPos;
+		std::clog << "Spawning guardian at " << spawnPosition.x << " / " << spawnPosition.y << std::endl;
+	}
+	else {
+		std::cerr << "No spawn point found for guardian, spawning at center" << std::endl;
+	}
+	guardian->spawn(spawnPosition);
+}
+

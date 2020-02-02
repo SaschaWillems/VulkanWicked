@@ -167,3 +167,12 @@ void Player::draw(CommandBuffer* cb)
 		assetManager->getModel("portal_spawner_good")->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
 	}
 }
+
+void Player::spawn(glm::vec2 spawnPosition)
+{
+	state = PlayerState::Default;
+	health = 100.0f;
+	position = glm::vec3(spawnPosition.x, 0.0f, spawnPosition.y);
+	velocity = glm::vec2(0.0f);
+	rotation = glm::vec2(0.0f);
+}

@@ -53,5 +53,6 @@ public:
 	void updateGPUResources();
 	void update(float dT);
 	void draw(CommandBuffer* cb);
+	void spawn(glm::vec2 spawnPosition);
 };
 

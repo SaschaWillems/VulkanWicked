@@ -9,9 +9,9 @@
 Guardian::Guardian()
 {
     health = 100.0f;
-    position = glm::vec3(playingField->width / 2.0f - 1.0f, 0.0f, playingField->height / 2.0f - 1.0f);
+    position = glm::vec3(0.0f);
     rotation = glm::vec2(0.0f);
-    direction = glm::vec2(-1.0f, 0.0f);
+    direction = glm::vec2(0.0f);
 }
 
 LightSource Guardian::getLightSource()
@@ -20,7 +20,7 @@ LightSource Guardian::getLightSource()
     LightSource lightSource;
     lightSource.position = glm::vec4(position.x, 1.4f, position.z, 1.0f);
     lightSource.color = glm::vec3(0.5f, 0.0f, 0.0f);
-    lightSource.radius = 3.0f;
+    lightSource.radius = alive() ? 3.0f : 0.0f;
     return lightSource;
 }
 
@@ -56,17 +56,14 @@ void Guardian::update(float dT)
     // @todo: Different and proper movement behaviours
     if (glm::length(direction) != 0.0f) {
         glm::vec2 n = glm::normalize(direction);
-        position.x += n.x * 2.5f * dT;
-        position.z += n.y * 2.5f * dT;
-
-        if (direction.x < 0.0f && position.x < -(playingField->width / 2.0f) + 1.0f) {
-            direction.x = 1.0f;
+        position.x += n.x * 5.0f * dT;
+        position.z += n.y * 5.0f * dT;
+        if ((position.x <= gameState->boundingBox.left && direction.x < 0.0f) || (position.x >= gameState->boundingBox.right && direction.x > 0.0f)) {
+            direction.x = -direction.x;
         }
-
-        if (direction.x > 0.0f && position.x > (playingField->width / 2.0f) - 1.0f) {
-            direction.x = -1.0f;
+        if ((position.z <= gameState->boundingBox.top && direction.y < 0.0f) || (position.z >= gameState->boundingBox.bottom && direction.y > 0.0f)) {
+            direction.y = -direction.y;
         }
-
         updateGPUResources();
     }
 }
@@ -75,9 +72,22 @@ void Guardian::draw(CommandBuffer* cb)
 {
     assert(model);
     //@todo: Distinct pipeline
-    cb->bindPipeline(renderer->getPipeline("player"));
-    cb->bindDescriptorSets(renderer->getPipelineLayout("split_ubo"), { renderer->descriptorSets.camera, descriptorSet }, 0);
-    model->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
+    if (alive()) {
+        cb->bindPipeline(renderer->getPipeline("player"));
+        cb->bindDescriptorSets(renderer->getPipelineLayout("split_ubo"), { renderer->descriptorSets.camera, descriptorSet }, 0);
+        model->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
+    }
+}
+
+void Guardian::spawn(glm::vec2 spawnPosition)
+{
+    state = GuardianState::Default;
+    health = 100.0f;
+    position = glm::vec3(spawnPosition.x, 0.0f, spawnPosition.y);
+    rotation = glm::vec2(0.0f);
+    // @todo: Proper random direction
+    direction.x = randomFloat(1.0f) < 0.5f ? -1.0f : 1.0f;
+    direction.y = randomFloat(1.0f) < 0.5f ? -1.0f : 1.0f;
 }
 
 bool Guardian::hitTest(glm::vec3 pos)
@@ -85,4 +95,9 @@ bool Guardian::hitTest(glm::vec3 pos)
     // Add in some margin
     glm::vec2 hitSize = this->size * 0.9f;
     return (pos.x >= position.x - hitSize.x / 2.0f) && (pos.x <= position.x + hitSize.x / 2.0f) && (pos.z >= position.z - hitSize.y / 2.0f) && (pos.z <= position.z + hitSize.y / 2.0f);
+}
+
+bool Guardian::alive()
+{
+    return (health > 0.0f);
 }

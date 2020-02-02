@@ -11,6 +11,7 @@
 #include "Renderer/DescriptorSet.h"
 #include "Renderer/LightSource.h"
 #include "Renderer/VulkanglTFModel.h"
+#include "Utils.h"
 #include "GameState.h"
 #include "PlayingField.h"
 
@@ -38,6 +39,8 @@ public:
 	void setModel(std::string name);
 	void update(float dT);
 	void draw(CommandBuffer* cb);
+	void spawn(glm::vec2 spawnPosition);
 	bool hitTest(glm::vec3 pos);
+	bool alive();
 };
 

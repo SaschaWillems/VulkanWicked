@@ -17,6 +17,8 @@
 #include "GameInputListener.h"
 #include "PlayingField.h"
 #include "Cell.h"
+#include "Player.h"
+#include "Guardian.h"
 
 class Game: public GameInputListener, public RenderObject
 {
@@ -25,6 +27,8 @@ private:
 	void updateState(float dT);
 	void onKeyPress(SDL_Keycode keyCode);
 public:
+	Player* player;
+	Guardian* guardian;
 	DescriptorSet* descriptorSetProjectiles;
 	bool paused = false;
 	Buffer projectilesUbo;
@@ -34,5 +38,7 @@ public:
 	void updateProjectiles(float dT);
 	void prepareGPUResources();
 	void updateGPUResources();
+	void spawnPlayer();
+	void spawnGuardian();
 };
 
