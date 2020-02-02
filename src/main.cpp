@@ -45,6 +45,13 @@ void init()
 	game = new Game();
 	game->setRenderer(renderer);
 	gameState = new GameState();
+	// Visual bounding box
+	// @todo: Different aspect ratios
+	const float dim = 12.5f;
+	const float ar = (float)renderer->width / (float)renderer->height;
+	BoundingBox boundingBox(-dim * ar, dim * ar, -dim, dim);
+	gameState->boundingBox = boundingBox;
+
 
 	playingField = new PlayingField();
 	playingField->setRenderer(renderer);
@@ -65,14 +72,6 @@ void init()
 
 	std::srand((int)std::time(nullptr));
 
-	// Visual bounding box
-	// @todo: Different aspect ratios
-	const float dim = 12.5f;
-	const float ar = (float)renderer->width / (float)renderer->height;
-	BoundingBox boundingBox(-dim * ar, dim * ar, -dim, dim);
-
-	gameState->boundingBox = boundingBox;
-
 	renderer->camera.type = Camera::CameraType::firstperson;
 	renderer->camera.position = { 0.f, 20.0f, 0.0f };
 	renderer->camera.setRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
@@ -82,6 +81,9 @@ void init()
 
 	debugUI->player = player;
 	debugUI->guardian = guardian;
+
+	game->spawnPlayer();
+	game->spawnGuardian();
 }
 
 void buildCommandBuffer()
