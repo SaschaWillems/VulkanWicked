@@ -224,6 +224,7 @@ int SDL_main(int argc, char* argv[])
 	init();
 
 	assetManager->addModelsFolder("scenes");
+	assetManager->addTexturesFolder("textures");
 
 	guardian->setModel("guardian_black_sun");
 

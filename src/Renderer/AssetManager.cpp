@@ -15,12 +15,24 @@ void AssetManager::addModelsFolder(std::string folder)
 		vkglTF::Model* model = new vkglTF::Model();
 		model->loadFromFile(file.path().string(), device, transferQueue);
 		models[name] = model;
+		std::clog << "Model \"" << name << "\" added from \"" << folder << "\"" << std::endl;
 	}
 }
 
 vkglTF::Model* AssetManager::getModel(std::string name)
 {
 	return models[name];
+}
+
+void AssetManager::addTexturesFolder(std::string folder)
+{
+	for (const auto& file : std::filesystem::directory_iterator(assetPath + folder)) {
+		const std::string name = file.path().stem().string();
+		Texture2D* texture = new Texture2D();
+		texture->loadFromFile(file.path().string(), device, transferQueue);
+		textures[name] = texture;
+		std::clog << "Texture \"" << name << "\" added from \"" << folder << "\"" << std::endl;
+	}
 }
 
 AssetManager::AssetManager()
