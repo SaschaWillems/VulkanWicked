@@ -20,6 +20,7 @@ set(KTX_SOURCES
     ../${KTX_DIR}/lib/swap.c
     ../${KTX_DIR}/lib/memstream.c
     ../${KTX_DIR}/lib/filestream.c
+    ../${KTX_DIR}/lib/vkloader.c
 )
 
 file(GLOB ADDITIONAL_SOURCES "../external/imgui/*.cpp")

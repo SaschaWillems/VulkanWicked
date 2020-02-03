@@ -47,7 +47,7 @@ ktxResult Texture::loadKTXFile(std::string filename, ktxTexture** target)
 	return result;
 }
 
-void Texture2D::loadFromFile(std::string filename, VkFormat format, Device* device, VkQueue copyQueue, VkImageUsageFlags imageUsageFlags, VkImageLayout imageLayout)
+void Texture2D::loadFromFile(std::string filename, Device* device, VkQueue copyQueue, VkImageUsageFlags imageUsageFlags, VkImageLayout imageLayout)
 {
 	ktxTexture* ktxTexture;
 	ktxResult result = loadKTXFile(filename, &ktxTexture);
@@ -60,6 +60,7 @@ void Texture2D::loadFromFile(std::string filename, VkFormat format, Device* devi
 
 	ktx_uint8_t* ktxTextureData = ktxTexture_GetData(ktxTexture);
 	ktx_size_t ktxTextureSize = ktxTexture_GetSize(ktxTexture);
+	VkFormat format = ktxTexture_GetVkFormat(ktxTexture);
 
 	// Get device properites for the requested texture format
 	VkFormatProperties formatProperties;
@@ -232,7 +233,7 @@ void Texture2D::loadFromFile(std::string filename, VkFormat format, Device* devi
 
 
 
-void Texture2DArray::loadFromFile(std::string filename, VkFormat format, Device* device, VkQueue copyQueue, VkImageUsageFlags imageUsageFlags, VkImageLayout imageLayout)
+void Texture2DArray::loadFromFile(std::string filename, Device* device, VkQueue copyQueue, VkImageUsageFlags imageUsageFlags, VkImageLayout imageLayout)
 {
 	ktxTexture* ktxTexture;
 	ktxResult result = loadKTXFile(filename, &ktxTexture);
@@ -246,6 +247,7 @@ void Texture2DArray::loadFromFile(std::string filename, VkFormat format, Device*
 
 	ktx_uint8_t* ktxTextureData = ktxTexture_GetData(ktxTexture);
 	ktx_size_t ktxTextureSize = ktxTexture_GetSize(ktxTexture);
+	VkFormat format = ktxTexture_GetVkFormat(ktxTexture);
 
 	VkMemoryAllocateInfo memAllocInfo = vks::initializers::memoryAllocateInfo();
 	VkMemoryRequirements memReqs;
@@ -406,7 +408,7 @@ void Texture2DArray::loadFromFile(std::string filename, VkFormat format, Device*
 	updateDescriptor();
 }
 
-void TextureCubeMap::loadFromFile(std::string filename, VkFormat format, Device* device, VkQueue copyQueue, VkImageUsageFlags imageUsageFlags, VkImageLayout imageLayout)
+void TextureCubeMap::loadFromFile(std::string filename, Device* device, VkQueue copyQueue, VkImageUsageFlags imageUsageFlags, VkImageLayout imageLayout)
 {
 	ktxTexture* ktxTexture;
 	ktxResult result = loadKTXFile(filename, &ktxTexture);
@@ -419,6 +421,7 @@ void TextureCubeMap::loadFromFile(std::string filename, VkFormat format, Device*
 
 	ktx_uint8_t* ktxTextureData = ktxTexture_GetData(ktxTexture);
 	ktx_size_t ktxTextureSize = ktxTexture_GetSize(ktxTexture);
+	VkFormat format = ktxTexture_GetVkFormat(ktxTexture);
 
 	VkMemoryAllocateInfo memAllocInfo = vks::initializers::memoryAllocateInfo();
 	VkMemoryRequirements memReqs;
