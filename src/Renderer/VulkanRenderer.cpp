@@ -597,10 +597,22 @@ void VulkanRenderer::setupLayouts()
 	descriptorSetLayout->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
 	descriptorSetLayout->create();
 
+	// Single image binding point
+	descriptorSetLayout = addDescriptorSetLayout("single_image");
+	descriptorSetLayout->addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+	descriptorSetLayout->create();
+
 	PipelineLayout* pipelineLayout;
 	pipelineLayout = addPipelineLayout("split_ubo");
 	pipelineLayout->addLayout(getDescriptorSetLayout("single_ubo"));
 	pipelineLayout->addLayout(getDescriptorSetLayout("single_ubo"));
+	pipelineLayout->addPushConstantRange(sizeof(vkglTF::PushConstBlockMaterial), 0, VK_SHADER_STAGE_FRAGMENT_BIT);
+	pipelineLayout->create();
+
+	pipelineLayout = addPipelineLayout("split_ubo_single_image");
+	pipelineLayout->addLayout(getDescriptorSetLayout("single_ubo"));
+	pipelineLayout->addLayout(getDescriptorSetLayout("single_ubo"));
+	pipelineLayout->addLayout(getDescriptorSetLayout("single_image"));
 	pipelineLayout->addPushConstantRange(sizeof(vkglTF::PushConstBlockMaterial), 0, VK_SHADER_STAGE_FRAGMENT_BIT);
 	pipelineLayout->create();
 
@@ -620,7 +632,7 @@ void VulkanRenderer::setupLayouts()
 void VulkanRenderer::setupPipelines()
 {
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = vks::initializers::pipelineInputAssemblyStateCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 0, VK_FALSE);
-	VkPipelineRasterizationStateCreateInfo rasterizationState = vks::initializers::pipelineRasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE, 0);
+	VkPipelineRasterizationStateCreateInfo rasterizationState = vks::initializers::pipelineRasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 0);
 	VkPipelineColorBlendAttachmentState blendAttachmentState = vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE);
 	VkPipelineColorBlendStateCreateInfo colorBlendState = vks::initializers::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = vks::initializers::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
@@ -674,6 +686,19 @@ void VulkanRenderer::setupPipelines()
 	pipeline->addShader("shaders/player.vert.spv");
 	pipeline->addShader("shaders/default_model.frag.spv");
 	pipeline->create();
+
+	depthStencilState.depthWriteEnable = VK_FALSE;
+	depthStencilState.depthTestEnable = VK_FALSE;
+	pipeline = addPipeline("tarot_card");
+	pipeline->setCreateInfo(pipelineCI);
+	pipeline->setCache(pipelineCache);
+	pipeline->setLayout(getPipelineLayout("split_ubo_single_image"));
+	pipeline->setRenderPass(getRenderPass("offscreen"));
+	pipeline->addShader("shaders/tarot_card.vert.spv");
+	pipeline->addShader("shaders/tarot_card.frag.spv");
+	pipeline->create();
+	depthStencilState.depthTestEnable = VK_TRUE;
+	depthStencilState.depthWriteEnable = VK_TRUE;
 
 	// Backdrop
 	pipeline = addPipeline("backdrop");

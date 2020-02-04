@@ -312,6 +312,10 @@ bool ColoredButton(const char* label, ImVec4 color)
 
 void DebugUI::render()
 {
+	ImVec2 btnSize = ImVec2(100.0f, 25.0f);
+	ImVec4 colorGood = ImVec4(1.0f, 0.6f, 0.24f, 1.0f);
+	ImVec4 colorEvil = ImVec4(0.0f, 0.0f, 0.74f, 1.0f);
+
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2(gameState->windowSize.x, gameState->windowSize.y);
 	io.MousePos = ImVec2(input->mouse.position.x, input->mouse.position.y);
@@ -349,12 +353,21 @@ void DebugUI::render()
 	ImGui::Text("State: %d", (int32_t)guardian->state);
 	ImGui::End();
 
+	ImGui::SetNextWindowPos(ImVec2(45, 45), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("Tarot deck", nullptr, ImGuiWindowFlags_None);
+	ImGui::Text("State: %d (timer = %f)", (int32_t)tarotDeck->state, tarotDeck->stateTimer);
+	if (ImGui::Button("Appear", btnSize)) {
+		tarotDeck->setState(TarotDeckState::Appearing);
+	}
+	if (ImGui::Button("Disappear", btnSize)) {
+		tarotDeck->setState(TarotDeckState::Disappearing);
+	}
+	ImGui::End();
+
 	ImGui::SetNextWindowPos(ImVec2(55, 55), ImGuiSetCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("Functions", nullptr, ImGuiWindowFlags_None);
-	ImVec2 btnSize = ImVec2(100.0f, 25.0f);
-	ImVec4 colorGood = ImVec4(1.0f, 0.6f, 0.24f, 1.0f);
-	ImVec4 colorEvil = ImVec4(0.0f, 0.0f, 0.74f, 1.0f);
 
 	if (ImGui::CollapsingHeader("Gamestate", ImGuiTreeNodeFlags_DefaultOpen))
 	{

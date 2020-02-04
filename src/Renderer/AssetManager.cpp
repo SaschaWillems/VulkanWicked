@@ -35,6 +35,11 @@ void AssetManager::addTexturesFolder(std::string folder)
 	}
 }
 
+Texture* AssetManager::getTexture(std::string name)
+{
+	return textures[name];
+}
+
 AssetManager::AssetManager()
 {
 	std::vector<std::string> paths = { "./data", "./../data/" };

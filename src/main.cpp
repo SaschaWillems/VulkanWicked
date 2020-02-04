@@ -22,6 +22,7 @@
 #include "Player.h"
 #include "Guardian.h"
 #include "PlayingField.h"
+#include "TarotDeck.h"
 
 #include "Game.h"
 #include "GameState.h"
@@ -32,6 +33,7 @@
 Game* game;
 Player* player;
 Guardian* guardian;
+TarotDeck* tarotDeck;
 VulkanRenderer* renderer;
 
 std::chrono::time_point tStart = std::chrono::high_resolution_clock::now();
@@ -52,7 +54,6 @@ void init()
 	BoundingBox boundingBox(-dim * ar, dim * ar, -dim, dim);
 	gameState->boundingBox = boundingBox;
 
-
 	playingField = new PlayingField();
 	playingField->setRenderer(renderer);
 	playingField->generate(35, 19);
@@ -62,6 +63,9 @@ void init()
 
 	guardian = new Guardian();
 	guardian->setRenderer(renderer);
+
+	tarotDeck = new TarotDeck();
+	tarotDeck->setRenderer(renderer);
 
 	input = new GameInput();
 	input->addInputListener(game);
@@ -81,6 +85,7 @@ void init()
 
 	debugUI->player = player;
 	debugUI->guardian = guardian;
+	debugUI->tarotDeck = tarotDeck;
 
 	game->spawnPlayer();
 	game->spawnGuardian();
@@ -99,9 +104,6 @@ void buildCommandBuffer()
 	cb->bindPipeline(renderer->getPipeline("backdrop"));
 	cb->bindDescriptorSets(renderer->getPipelineLayout("split_ubo"), { renderer->descriptorSets.camera, player->descriptorSet }, 0);
 	assetManager->getModel("plane")->draw(cb->handle, renderer->getPipelineLayout("split_ubo")->handle);
-
-	player->draw(cb);
-	guardian->draw(cb);
 
 	// Face
 	// @todo: Separate pipeline
@@ -155,6 +157,11 @@ void buildCommandBuffer()
 			}
 		}
 	}
+
+	//@todo: Virtual function in RenderObject class, register, Renderobjects and draw in loop
+	tarotDeck->draw(cb);
+	player->draw(cb);
+	guardian->draw(cb);
 
 	// Projectiles
 	if (!gameState->projectiles.empty()) {
@@ -233,10 +240,12 @@ int SDL_main(int argc, char* argv[])
 	playingField->prepareGPUResources();
 	player->prepareGPUResources();
 	guardian->prepareGPUResources();
+	tarotDeck->prepareGPUResources();
 
 	renderer->camera.updateGPUResources();
 	player->updateGPUResources();
 	guardian->updateGPUResources();
+	tarotDeck->updateGPUResources();
 
 	bool minimized = false;
 	bool quit = false;
@@ -287,6 +296,7 @@ int SDL_main(int argc, char* argv[])
 			game->update(timeStep);
 			player->update(timeStep);
 			guardian->update(timeStep);
+			tarotDeck->update(timeStep);
 		}
 	}
 

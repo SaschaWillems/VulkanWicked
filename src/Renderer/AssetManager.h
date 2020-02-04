@@ -29,6 +29,7 @@ public:
 	void addModelsFolder(std::string folder);
 	vkglTF::Model* getModel(std::string name);
 	void addTexturesFolder(std::string folder);
+	Texture* getTexture(std::string name);
 	AssetManager();
 	void setDevice(Device* device);
 	void setTransferQueue(VkQueue queue);

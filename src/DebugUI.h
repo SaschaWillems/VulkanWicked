@@ -11,6 +11,7 @@
 #include "GameInput.h"
 #include "Player.h"
 #include "Guardian.h"
+#include "TarotDeck.h"
 #include "PlayingField.h"
 #include "Renderer/VulkanTools.h"
 #include "Renderer/AssetManager.h"
@@ -50,6 +51,7 @@ private:
 public:
 	Player* player;
 	Guardian* guardian;
+	TarotDeck* tarotDeck;
 	DebugUI();
 	~DebugUI();
 	void render();
