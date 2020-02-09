@@ -717,7 +717,7 @@ Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 	// If not present, default values are applied
 	const VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCI = vks::initializers::pipelineInputAssemblyStateCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 0, VK_FALSE);
 	const VkPipelineRasterizationStateCreateInfo rasterizationStateCI = vks::initializers::pipelineRasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 0);
-	const VkPipelineDepthStencilStateCreateInfo depthStencilStateCI = vks::initializers::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
+	VkPipelineDepthStencilStateCreateInfo depthStencilStateCI;
 	const VkPipelineViewportStateCreateInfo viewportStateCI = vks::initializers::pipelineViewportStateCreateInfo(1, 1, 0);
 	const VkPipelineMultisampleStateCreateInfo multisampleStateCI = vks::initializers::pipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_1_BIT, 0);
 	const std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
@@ -730,6 +730,25 @@ Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 
 	VkGraphicsPipelineCreateInfo pipelineCI{};
 	pipelineCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+	if (json.count("depthStencilState") > 0) {
+		depthStencilStateCI = {};
+		depthStencilStateCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencilStateCI.front.compareOp = VK_COMPARE_OP_ALWAYS;
+		depthStencilStateCI.back.compareOp = VK_COMPARE_OP_ALWAYS;
+		depthStencilStateCI.depthTestEnable = json["depthStencilState"]["depthTest"];
+		depthStencilStateCI.depthWriteEnable = json["depthStencilState"]["depthWrite"];
+		auto depthCompareOp = json["depthStencilState"]["compareOp"];
+		if (depthCompareOp == "VK_COMPARE_OP_LESS_OR_EQUAL") {
+			depthStencilStateCI.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		}
+		if (depthCompareOp == "VK_COMPARE_OP_NEVER") {
+			depthStencilStateCI.depthCompareOp = VK_COMPARE_OP_NEVER;
+		}
+	}
+	else {
+		depthStencilStateCI = vks::initializers::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
+	}
 
 	if (json.count("colorBlendState") > 0) {
 		if (json["colorBlendState"].count("blendAttachments") > 0) {
