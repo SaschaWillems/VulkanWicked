@@ -1,0 +1,9 @@
+{
+    "name": "projectile",
+    "layout": "split_ubo",
+    "renderpass": "offscreen",
+    "shaders" : [
+        "projectile.vert.spv",
+        "default_model.frag.spv"
+    ]
+}   

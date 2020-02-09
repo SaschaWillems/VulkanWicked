@@ -225,7 +225,7 @@ VulkanRenderer::VulkanRenderer()
 	commandBuffer->create();
 
 	setupLayouts();
-	setupPipelines();
+	loadPipelines();
 	setupDescriptorPool();
 
 	// Deferred composition
@@ -629,148 +629,14 @@ void VulkanRenderer::setupLayouts()
 	pipelineLayout->create();
 }
 
-void VulkanRenderer::setupPipelines()
+void VulkanRenderer::loadPipelines()
 {
-	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = vks::initializers::pipelineInputAssemblyStateCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 0, VK_FALSE);
-	VkPipelineRasterizationStateCreateInfo rasterizationState = vks::initializers::pipelineRasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 0);
-	VkPipelineColorBlendAttachmentState blendAttachmentState = vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE);
-	VkPipelineColorBlendStateCreateInfo colorBlendState = vks::initializers::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
-	VkPipelineDepthStencilStateCreateInfo depthStencilState = vks::initializers::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
-	VkPipelineViewportStateCreateInfo viewportState = vks::initializers::pipelineViewportStateCreateInfo(1, 1, 0);
-	VkPipelineMultisampleStateCreateInfo multisampleState = vks::initializers::pipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_1_BIT, 0);
-	std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-	VkPipelineDynamicStateCreateInfo dynamicState = vks::initializers::pipelineDynamicStateCreateInfo(dynamicStateEnables);
-
-	// Vertex bindings and attributes
-	std::vector<VkVertexInputBindingDescription> vertexInputBindings = {
-		vks::initializers::vertexInputBindingDescription(0, sizeof(vkglTF::Model::Vertex), VK_VERTEX_INPUT_RATE_VERTEX),
-	};
-	std::vector<VkVertexInputAttributeDescription> vertexInputAttributes = {
-		vks::initializers::vertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vkglTF::Model::Vertex, pos)),
-		vks::initializers::vertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vkglTF::Model::Vertex, normal)),
-		vks::initializers::vertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(vkglTF::Model::Vertex, uv0)),
-	};
-	VkPipelineVertexInputStateCreateInfo vertexInputState = vks::initializers::pipelineVertexInputStateCreateInfo();
-	vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputBindings.size());
-	vertexInputState.pVertexBindingDescriptions = vertexInputBindings.data();
-	vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size());
-	vertexInputState.pVertexAttributeDescriptions = vertexInputAttributes.data();
-
-	VkGraphicsPipelineCreateInfo pipelineCI{};
-	pipelineCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineCI.pVertexInputState = &vertexInputState;
-	pipelineCI.pInputAssemblyState = &inputAssemblyState;
-	pipelineCI.pRasterizationState = &rasterizationState;
-	pipelineCI.pColorBlendState = &colorBlendState;
-	pipelineCI.pMultisampleState = &multisampleState;
-	pipelineCI.pViewportState = &viewportState;
-	pipelineCI.pDepthStencilState = &depthStencilState;
-	pipelineCI.pDynamicState = &dynamicState;
-
-	Pipeline* pipeline = nullptr;
-
-	// Player
-	std::array<VkPipelineColorBlendAttachmentState, 3> blendAttachmentStates = {
-		vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
-		vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
-		vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE)
-	};
-	colorBlendState.attachmentCount = static_cast<uint32_t>(blendAttachmentStates.size());
-	colorBlendState.pAttachments = blendAttachmentStates.data();
-
-	pipeline = addPipeline("player");
-	pipeline->setCreateInfo(pipelineCI);
-	pipeline->setCache(pipelineCache);
-	pipeline->setLayout(getPipelineLayout("split_ubo"));
-	pipeline->setRenderPass(getRenderPass("offscreen"));
-	pipeline->addShader("shaders/player.vert.spv");
-	pipeline->addShader("shaders/default_model.frag.spv");
-	pipeline->create();
-
-	depthStencilState.depthWriteEnable = VK_FALSE;
-	depthStencilState.depthTestEnable = VK_FALSE;
-	pipeline = addPipeline("tarot_card");
-	pipeline->setCreateInfo(pipelineCI);
-	pipeline->setCache(pipelineCache);
-	pipeline->setLayout(getPipelineLayout("split_ubo_single_image"));
-	pipeline->setRenderPass(getRenderPass("offscreen"));
-	pipeline->addShader("shaders/tarot_card.vert.spv");
-	pipeline->addShader("shaders/tarot_card.frag.spv");
-	pipeline->create();
-	depthStencilState.depthTestEnable = VK_TRUE;
-	depthStencilState.depthWriteEnable = VK_TRUE;
-
-	// Backdrop
-	pipeline = addPipeline("backdrop");
-	pipeline->setCreateInfo(pipelineCI);
-	pipeline->setCache(pipelineCache);
-	pipeline->setLayout(getPipelineLayout("split_ubo"));
-	pipeline->setRenderPass(getRenderPass("offscreen"));
-	pipeline->addShader("shaders/backdrop.vert.spv");
-	pipeline->addShader("shaders/default_model.frag.spv");
-	pipeline->create();
-
-	// Projectile
-	pipeline = addPipeline("projectile");
-	pipeline->setCreateInfo(pipelineCI);
-	pipeline->setCache(pipelineCache);
-	pipeline->setLayout(getPipelineLayout("split_ubo"));
-	pipeline->setRenderPass(getRenderPass("offscreen"));
-	pipeline->addShader("shaders/projectile.vert.spv");
-	pipeline->addShader("shaders/default_model.frag.spv");
-	pipeline->create();
-
-	// Spore
-	// Per-Spore Data is passed via instanced data
-	vertexInputBindings = {
-		vks::initializers::vertexInputBindingDescription(0, sizeof(vkglTF::Model::Vertex), VK_VERTEX_INPUT_RATE_VERTEX),
-		vks::initializers::vertexInputBindingDescription(1, sizeof(InstanceData), VK_VERTEX_INPUT_RATE_INSTANCE)
-	};
-	vertexInputAttributes = {
-		// Per-Vertex
-		vks::initializers::vertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vkglTF::Model::Vertex, pos)),
-		vks::initializers::vertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vkglTF::Model::Vertex, normal)),
-		vks::initializers::vertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(vkglTF::Model::Vertex, uv0)),
-		// Per-Instance
-		vks::initializers::vertexInputAttributeDescription(1, 3, VK_FORMAT_R32G32B32_SFLOAT, offsetof(InstanceData, pos)),
-		vks::initializers::vertexInputAttributeDescription(1, 4, VK_FORMAT_R32_SFLOAT, offsetof(InstanceData, scale)),
-	};
-	vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputBindings.size());
-	vertexInputState.pVertexBindingDescriptions = vertexInputBindings.data();
-	vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size());
-	vertexInputState.pVertexAttributeDescriptions = vertexInputAttributes.data();
-
-	pipeline = addPipeline("spore");
-	pipeline->setCreateInfo(pipelineCI);
-	pipeline->setCache(pipelineCache);
-	pipeline->setLayout(getPipelineLayout("split_ubo"));
-	pipeline->setRenderPass(getRenderPass("offscreen"));
-	pipeline->addShader("shaders/spore.vert.spv");
-	pipeline->addShader("shaders/default_model.frag.spv");
-	pipeline->create();
-
-	// Deferred composition
-	colorBlendState = vks::initializers::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
-	VkPipelineVertexInputStateCreateInfo emptyInputState = vks::initializers::pipelineVertexInputStateCreateInfo();
-	pipelineCI.pVertexInputState = &emptyInputState;
-
-	pipeline = addPipeline("composition");
-	pipeline->setCreateInfo(pipelineCI);
-	pipeline->setCache(pipelineCache);
-	pipeline->setLayout(getPipelineLayout("deferred_composition"));
-	pipeline->setRenderPass(getRenderPass("deferred_composition"));
-	pipeline->addShader("shaders/composition.vert.spv");
-	pipeline->addShader("shaders/composition.frag.spv");
-	pipeline->create();
-
-	pipeline = addPipeline("composition_paused");
-	pipeline->setCreateInfo(pipelineCI);
-	pipeline->setCache(pipelineCache);
-	pipeline->setLayout(getPipelineLayout("deferred_composition"));
-	pipeline->setRenderPass(getRenderPass("deferred_composition"));
-	pipeline->addShader("shaders/composition.vert.spv");
-	pipeline->addShader("shaders/composition_pause.frag.spv");
-	pipeline->create();
+	for (const auto& file : std::filesystem::directory_iterator(assetManager->assetPath + "pipelines")) {
+		const std::string ext = file.path().extension().string();
+		if (ext == ".json") {
+			loadPipelineFromFile(file.path().string());
+		}
+	}
 }
 
 void VulkanRenderer::setupDescriptorPool()
@@ -824,6 +690,130 @@ Pipeline* VulkanRenderer::addPipeline(std::string name)
 {
 	Pipeline* pipeline = new Pipeline(device->handle);
 	pipelines[name] = pipeline;
+	return pipeline;
+}
+
+Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
+{
+	std::clog << "Loading pipeline from \"" << filename << "\"" << std::endl;
+	std::ifstream is(assetManager->assetPath + filename);
+	if (!is.is_open())
+	{
+		std::cerr << "Error: Could not open pipeline definition file \"" << filename << "\"" << std::endl;
+		return nullptr;
+	}
+	nlohmann::json json;
+	is >> json;
+	is.close();
+	Pipeline* pipeline = addPipeline(json["name"]);
+	pipeline->setCache(pipelineCache);
+	pipeline->setLayout(getPipelineLayout(json["layout"]));
+	pipeline->setRenderPass(getRenderPass(json["renderpass"]));
+	for (auto& shader : json["shaders"]) {
+		std::string shaderName = shader;
+		pipeline->addShader("shaders/" + shaderName);
+	}
+	// Pipeline creation info members can be set explicitly
+	// If not present, default values are applied
+	const VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCI = vks::initializers::pipelineInputAssemblyStateCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 0, VK_FALSE);
+	const VkPipelineRasterizationStateCreateInfo rasterizationStateCI = vks::initializers::pipelineRasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 0);
+	const VkPipelineDepthStencilStateCreateInfo depthStencilStateCI = vks::initializers::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
+	const VkPipelineViewportStateCreateInfo viewportStateCI = vks::initializers::pipelineViewportStateCreateInfo(1, 1, 0);
+	const VkPipelineMultisampleStateCreateInfo multisampleStateCI = vks::initializers::pipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_1_BIT, 0);
+	const std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+	const VkPipelineDynamicStateCreateInfo dynamicStateCI = vks::initializers::pipelineDynamicStateCreateInfo(dynamicStateEnables);
+	std::vector<VkPipelineColorBlendAttachmentState> blendAttachmentStates;
+	VkPipelineColorBlendStateCreateInfo colorBlendStateCI;
+	std::vector<VkVertexInputBindingDescription> vertexInputBindings;
+	std::vector<VkVertexInputAttributeDescription> vertexInputAttributes;
+	VkPipelineVertexInputStateCreateInfo vertexInputState = vks::initializers::pipelineVertexInputStateCreateInfo();
+
+	VkGraphicsPipelineCreateInfo pipelineCI{};
+	pipelineCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+	if (json.count("colorBlendState") > 0) {
+		if (json["colorBlendState"].count("blendAttachments") > 0) {
+			for (auto& attachment : json["colorBlendState"]["blendAttachments"]) {
+				VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState{};
+				pipelineColorBlendAttachmentState.colorWriteMask = attachment["colorWriteMask"];
+				pipelineColorBlendAttachmentState.blendEnable = attachment["blendEnable"];
+				blendAttachmentStates.push_back(pipelineColorBlendAttachmentState);
+			}
+		}
+	}
+	else {
+		// Default setup is based on G-Buffer passes (filling three attachments)
+		blendAttachmentStates = {
+			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
+			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
+			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE)
+		};
+	}
+	colorBlendStateCI = vks::initializers::pipelineColorBlendStateCreateInfo(static_cast<uint32_t>(blendAttachmentStates.size()), blendAttachmentStates.data());
+
+	if (json.count("vertexInputState") > 0) {
+		if (json["vertexInputState"].count("vertexBindingDescriptions") > 0) {
+			for (auto& description : json["vertexInputState"]["vertexBindingDescriptions"]) {
+				VkVertexInputBindingDescription bindingDescription{};
+				bindingDescription.binding = description["binding"];
+				bindingDescription.stride = description["stride"];
+				if (description["inputRate"] == "VK_VERTEX_INPUT_RATE_INSTANCE") {
+					bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+				}
+				else {
+					bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+				}
+				vertexInputBindings.push_back(bindingDescription);
+			}
+		}
+		if (json["vertexInputState"].count("vertexAttributeDescriptions") > 0) {
+			for (auto& description : json["vertexInputState"]["vertexAttributeDescriptions"]) {
+				VkVertexInputAttributeDescription attributeDescription{};
+				attributeDescription.binding = description["binding"];
+				attributeDescription.location = description["location"];
+				attributeDescription.offset = description["offset"];
+				auto format = description["format"];
+				if (format == "VK_FORMAT_R32_SFLOAT") {
+					attributeDescription.format = VK_FORMAT_R32_SFLOAT;
+				}
+				if (format == "VK_FORMAT_R32G32_SFLOAT") {
+					attributeDescription.format = VK_FORMAT_R32G32_SFLOAT;
+				}
+				if (format == "VK_FORMAT_R32G32B32_SFLOAT") {
+					attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+				}
+				vertexInputAttributes.push_back(attributeDescription);
+			}
+		}
+	}
+	else {
+		// Default setup is based on glTF model vertex input
+		vertexInputBindings = {
+			vks::initializers::vertexInputBindingDescription(0, sizeof(vkglTF::Model::Vertex), VK_VERTEX_INPUT_RATE_VERTEX),
+		};
+		vertexInputAttributes = {
+			vks::initializers::vertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vkglTF::Model::Vertex, pos)),
+			vks::initializers::vertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(vkglTF::Model::Vertex, normal)),
+			vks::initializers::vertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(vkglTF::Model::Vertex, uv0)),
+		};
+	}
+	vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputBindings.size());
+	vertexInputState.pVertexBindingDescriptions = vertexInputBindings.data();
+	vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size());
+	vertexInputState.pVertexAttributeDescriptions = vertexInputAttributes.data();
+
+	pipelineCI.pVertexInputState = &vertexInputState;
+	pipelineCI.pInputAssemblyState = &inputAssemblyStateCI;
+	pipelineCI.pRasterizationState = &rasterizationStateCI;
+	pipelineCI.pColorBlendState = &colorBlendStateCI;
+	pipelineCI.pMultisampleState = &multisampleStateCI;
+	pipelineCI.pViewportState = &viewportStateCI;
+	pipelineCI.pDepthStencilState = &depthStencilStateCI;
+	pipelineCI.pDynamicState = &dynamicStateCI;
+
+	pipeline->setCreateInfo(pipelineCI);
+	pipeline->create();
+
 	return pipeline;
 }
 

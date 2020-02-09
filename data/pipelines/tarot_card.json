@@ -1,0 +1,9 @@
+{
+    "name": "tarot_card",
+    "layout": "split_ubo_single_image",
+    "renderpass": "offscreen",
+    "shaders" : [
+        "tarot_card.vert.spv",
+        "tarot_card.frag.spv"
+    ]
+}   

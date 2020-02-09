@@ -1,0 +1,9 @@
+{
+    "name": "backdrop",
+    "layout": "split_ubo",
+    "renderpass": "offscreen",
+    "shaders" : [
+        "backdrop.vert.spv",
+        "default_model.frag.spv"
+    ]
+}   

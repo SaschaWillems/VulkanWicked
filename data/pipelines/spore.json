@@ -1,0 +1,55 @@
+{
+    "name": "spore",
+    "layout": "split_ubo",
+    "renderpass": "offscreen",
+    "shaders" : [
+        "spore.vert.spv",
+        "default_model.frag.spv"
+    ],
+    "vertexInputState": {
+        "vertexBindingDescriptions": [
+            {
+                "binding": 0,
+                "stride": 72,
+                "inputRate": "VK_VERTEX_INPUT_RATE_VERTEX"
+            },
+            {
+                "binding": 1,
+                "stride": 16,
+                "inputRate": "VK_VERTEX_INPUT_RATE_INSTANCE"
+            }
+        ],
+        "vertexAttributeDescriptions": [
+            {
+                "binding": 0,
+                "location": 0,
+                "format": "VK_FORMAT_R32G32B32_SFLOAT",
+                "offset": 0
+            },
+            {
+                "binding": 0,
+                "location": 1,
+                "format": "VK_FORMAT_R32G32B32_SFLOAT",
+                "offset": 12
+            },
+            {
+                "binding": 0,
+                "location": 2,
+                "format": "VK_FORMAT_R32G32_SFLOAT",
+                "offset": 24
+            },
+            {
+                "binding": 1,
+                "location": 3,
+                "format": "VK_FORMAT_R32G32B32_SFLOAT",
+                "offset": 0
+            },
+            {
+                "binding": 1,
+                "location": 4,
+                "format": "VK_FORMAT_R32_SFLOAT",
+                "offset": 12
+            }
+        ]
+    }    
+}   

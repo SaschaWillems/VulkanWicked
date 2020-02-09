@@ -27,7 +27,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <sys/stat.h>
-
+#include "json.hpp"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -94,8 +94,10 @@ private:
 	void setupDepthStencil();
 	void setupFrameBuffer();
 	void setupLayouts();
-	void setupPipelines();
 	void setupDescriptorPool();
+
+	Pipeline* loadPipelineFromFile(std::string filename);
+	void loadPipelines();
 protected:
 	VkPhysicalDevice physicalDevice;
 	VkPhysicalDeviceProperties deviceProperties;

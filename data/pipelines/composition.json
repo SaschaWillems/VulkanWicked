@@ -1,0 +1,21 @@
+{
+    "name": "composition",
+    "layout": "deferred_composition",
+    "renderpass": "deferred_composition",
+    "shaders" : [
+        "composition.vert.spv",
+        "composition.frag.spv"
+    ],
+    "colorBlendState": {
+        "blendAttachments": [
+            {
+              "colorWriteMask": 15,
+              "blendEnable": false
+            }
+        ]
+    },
+    "vertexInputState": {
+        "vertexBindingDescriptions": [],
+        "vertexAttributeDescriptions": []
+    }
+}   

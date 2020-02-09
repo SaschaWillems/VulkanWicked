@@ -1,0 +1,9 @@
+{
+    "name": "player",
+    "layout": "split_ubo",
+    "renderpass": "offscreen",
+    "shaders" : [
+        "player.vert.spv",
+        "default_model.frag.spv"
+    ]
+}   
