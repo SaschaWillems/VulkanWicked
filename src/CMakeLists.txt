@@ -4,7 +4,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX -D_USE_MATH_DEFINES -DGLM_ENA
 file(GLOB SOURCE *.cpp)
 file(GLOB HEADERS *.h *.hpp)
 file(GLOB SHADERS "../data/shaders/*.vert" "../data/shaders/*.frag" "../data/shaders/*.comp" "../data/shaders/*.geom" "../data/shaders/*.tesc" "../data/shaders/*.tese")
+file(GLOB SHADERS_INCLUDE "../data/shaders/includes/*.glsl")
 source_group("Game\\Shaders" FILES ${SHADERS})
+source_group("Game\\Shaders\\Includes" FILES ${SHADERS_INCLUDE})
 source_group("Game\\Headers" FILES ${HEADERS})
 source_group("Game\\Source" FILES ${SOURCE})
 
@@ -26,10 +28,10 @@ set(KTX_SOURCES
 file(GLOB ADDITIONAL_SOURCES "../external/imgui/*.cpp")
 
 if(WIN32)
-	add_executable(${EXAMPLE_NAME} WIN32 main.cpp ${SOURCE} ${HEADERS} ${SHADERS} ${RENDERER_SOURCE} ${RENDERER_HEADERS} ${ADDITIONAL_SOURCES} ${KTX_SOURCES})
+	add_executable(${EXAMPLE_NAME} WIN32 main.cpp ${SOURCE} ${HEADERS} ${SHADERS} ${SHADERS_INCLUDE} ${RENDERER_SOURCE} ${RENDERER_HEADERS} ${ADDITIONAL_SOURCES} ${KTX_SOURCES})
 	target_link_libraries(${EXAMPLE_NAME} ${SDL2_LIBRARIES} ${Vulkan_LIBRARY} ${WINLIBS})
 else(WIN32)
-	add_executable(${EXAMPLE_NAME} ${MAIN_CPP} ${SOURCE} ${SHADERS})
+	add_executable(${EXAMPLE_NAME} ${MAIN_CPP} ${SOURCE} ${SHADERS} ${SHADERS_INCLUDE})
 	target_link_libraries(${EXAMPLE_NAME})
 endif(WIN32)
 if(RESOURCE_INSTALL_DIR)
