@@ -693,6 +693,62 @@ Pipeline* VulkanRenderer::addPipeline(std::string name)
 	return pipeline;
 }
 
+VkBlendOp blendOpEnum(const std::string &value)
+{
+	if (value == "VK_BLEND_OP_ADD") {
+		return VK_BLEND_OP_ADD;
+	}
+}
+
+VkBlendFactor blendFactorEnum(const std::string &value)
+{
+	if (value == "VK_BLEND_FACTOR_ZERO") {
+		return VK_BLEND_FACTOR_ZERO;
+	}
+	if (value == "VK_BLEND_FACTOR_ONE") {
+		return VK_BLEND_FACTOR_ONE;
+	}
+	if (value == "VK_BLEND_FACTOR_SRC_ALPHA") {
+		return VK_BLEND_FACTOR_SRC_ALPHA;
+	}
+	if (value == "VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA") {
+		return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	}
+}
+
+VkCompareOp compareOpEnum(const std::string &value)
+{
+	if (value == "VK_COMPARE_OP_NEVER") {
+		return VK_COMPARE_OP_NEVER;
+	}
+	if (value == "VK_COMPARE_OP_LESS_OR_EQUAL") {
+		return VK_COMPARE_OP_LESS_OR_EQUAL;
+	}
+}
+
+VkVertexInputRate vertexInputRateEnum(const std::string &value)
+{
+	if (value == "VK_VERTEX_INPUT_RATE_VERTEX") {
+		return VK_VERTEX_INPUT_RATE_VERTEX;
+	}
+	if (value == "VK_VERTEX_INPUT_RATE_INSTANCE") {
+		return VK_VERTEX_INPUT_RATE_INSTANCE;
+	}
+}
+
+VkFormat formatEnum(const std::string& value)
+{
+	if (value == "VK_FORMAT_R32_SFLOAT") {
+		return VK_FORMAT_R32_SFLOAT;
+	}
+	if (value == "VK_FORMAT_R32G32_SFLOAT") {
+		return VK_FORMAT_R32G32_SFLOAT;
+	}
+	if (value == "VK_FORMAT_R32G32B32_SFLOAT") {
+		return VK_FORMAT_R32G32B32_SFLOAT;
+	}
+}
+
 Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 {
 	std::clog << "Loading pipeline from \"" << filename << "\"" << std::endl;
@@ -738,13 +794,7 @@ Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 		depthStencilStateCI.back.compareOp = VK_COMPARE_OP_ALWAYS;
 		depthStencilStateCI.depthTestEnable = json["depthStencilState"]["depthTest"];
 		depthStencilStateCI.depthWriteEnable = json["depthStencilState"]["depthWrite"];
-		auto depthCompareOp = json["depthStencilState"]["compareOp"];
-		if (depthCompareOp == "VK_COMPARE_OP_LESS_OR_EQUAL") {
-			depthStencilStateCI.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-		}
-		if (depthCompareOp == "VK_COMPARE_OP_NEVER") {
-			depthStencilStateCI.depthCompareOp = VK_COMPARE_OP_NEVER;
-		}
+		depthStencilStateCI.depthCompareOp = compareOpEnum(json["depthStencilState"]["compareOp"]);
 	}
 	else {
 		depthStencilStateCI = vks::initializers::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
@@ -756,6 +806,14 @@ Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 				VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState{};
 				pipelineColorBlendAttachmentState.colorWriteMask = attachment["colorWriteMask"];
 				pipelineColorBlendAttachmentState.blendEnable = attachment["blendEnable"];
+				if (pipelineColorBlendAttachmentState.blendEnable) {
+					pipelineColorBlendAttachmentState.srcColorBlendFactor = blendFactorEnum(attachment["color"]["srcFactor"]);
+					pipelineColorBlendAttachmentState.dstColorBlendFactor = blendFactorEnum(attachment["color"]["dstFactor"]);
+					pipelineColorBlendAttachmentState.colorBlendOp = blendOpEnum(attachment["color"]["op"]);
+					pipelineColorBlendAttachmentState.srcAlphaBlendFactor = blendFactorEnum(attachment["alpha"]["srcFactor"]);
+					pipelineColorBlendAttachmentState.dstAlphaBlendFactor = blendFactorEnum(attachment["alpha"]["dstFactor"]);
+					pipelineColorBlendAttachmentState.alphaBlendOp = blendOpEnum(attachment["alpha"]["op"]);
+				}
 				blendAttachmentStates.push_back(pipelineColorBlendAttachmentState);
 			}
 		}
@@ -776,12 +834,7 @@ Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 				VkVertexInputBindingDescription bindingDescription{};
 				bindingDescription.binding = description["binding"];
 				bindingDescription.stride = description["stride"];
-				if (description["inputRate"] == "VK_VERTEX_INPUT_RATE_INSTANCE") {
-					bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
-				}
-				else {
-					bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-				}
+				bindingDescription.inputRate = vertexInputRateEnum(description["inputRate"]);
 				vertexInputBindings.push_back(bindingDescription);
 			}
 		}
@@ -791,16 +844,7 @@ Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 				attributeDescription.binding = description["binding"];
 				attributeDescription.location = description["location"];
 				attributeDescription.offset = description["offset"];
-				auto format = description["format"];
-				if (format == "VK_FORMAT_R32_SFLOAT") {
-					attributeDescription.format = VK_FORMAT_R32_SFLOAT;
-				}
-				if (format == "VK_FORMAT_R32G32_SFLOAT") {
-					attributeDescription.format = VK_FORMAT_R32G32_SFLOAT;
-				}
-				if (format == "VK_FORMAT_R32G32B32_SFLOAT") {
-					attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-				}
+				attributeDescription.format = formatEnum(description["format"]);
 				vertexInputAttributes.push_back(attributeDescription);
 			}
 		}
