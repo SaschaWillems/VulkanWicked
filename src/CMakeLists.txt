@@ -5,8 +5,10 @@ file(GLOB SOURCE *.cpp)
 file(GLOB HEADERS *.h *.hpp)
 file(GLOB SHADERS "../data/shaders/*.vert" "../data/shaders/*.frag" "../data/shaders/*.comp" "../data/shaders/*.geom" "../data/shaders/*.tesc" "../data/shaders/*.tese")
 file(GLOB SHADERS_INCLUDE "../data/shaders/includes/*.glsl")
-source_group("Game\\Shaders" FILES ${SHADERS})
-source_group("Game\\Shaders\\Includes" FILES ${SHADERS_INCLUDE})
+file(GLOB RES_PIPELINES "../data/pipelines/*.json")
+source_group("Game\\Resources\\Shaders" FILES ${SHADERS})
+source_group("Game\\Resources\\Shaders\\Includes" FILES ${SHADERS_INCLUDE})
+source_group("Game\\Resources\\Pipelines" FILES ${RES_PIPELINES})
 source_group("Game\\Headers" FILES ${HEADERS})
 source_group("Game\\Source" FILES ${SOURCE})
 
@@ -14,6 +16,12 @@ file(GLOB RENDERER_SOURCE "renderer/*.cpp")
 file(GLOB RENDERER_HEADERS "renderer/*.h" "renderer/*.hpp")
 source_group("Renderer\\Source" FILES ${RENDERER_SOURCE})
 source_group("Renderer\\Headers" FILES ${RENDERER_HEADERS})
+
+file(GLOB UI_SOURCE "UI/*.cpp")
+file(GLOB UI_HEADERS "UI/*.h" "UI/*.hpp")
+source_group("UI\\Source" FILES ${UI_SOURCE})
+source_group("UI\\Headers" FILES ${UI_HEADERS})
+
 
 set(KTX_SOURCES
     ../${KTX_DIR}/lib/texture.c
@@ -28,10 +36,10 @@ set(KTX_SOURCES
 file(GLOB ADDITIONAL_SOURCES "../external/imgui/*.cpp")
 
 if(WIN32)
-	add_executable(${EXAMPLE_NAME} WIN32 main.cpp ${SOURCE} ${HEADERS} ${SHADERS} ${SHADERS_INCLUDE} ${RENDERER_SOURCE} ${RENDERER_HEADERS} ${ADDITIONAL_SOURCES} ${KTX_SOURCES})
+	add_executable(${EXAMPLE_NAME} WIN32 ${MAIN_CPP} ${SOURCE} ${HEADERS} ${SHADERS} ${SHADERS_INCLUDE} ${RES_PIPELINES} ${RENDERER_SOURCE} ${RENDERER_HEADERS} ${UI_SOURCE} ${UI_HEADERS} ${ADDITIONAL_SOURCES} ${KTX_SOURCES})
 	target_link_libraries(${EXAMPLE_NAME} ${SDL2_LIBRARIES} ${Vulkan_LIBRARY} ${WINLIBS})
 else(WIN32)
-	add_executable(${EXAMPLE_NAME} ${MAIN_CPP} ${SOURCE} ${SHADERS} ${SHADERS_INCLUDE})
+	add_executable(${EXAMPLE_NAME} ${MAIN_CPP} ${SOURCE} ${SHADERS} ${SHADERS_INCLUDE} ${RES_PIPELINES})
 	target_link_libraries(${EXAMPLE_NAME})
 endif(WIN32)
 if(RESOURCE_INSTALL_DIR)
