@@ -35,7 +35,7 @@ namespace UI
 		assert(font);
 	}
 
-	void GameUI::addTextElement(std::string name, std::string text, glm::vec3 position, TextAlignment alignment, glm::vec4 color)
+	void GameUI::addTextElement(std::string name, std::string text, glm::vec3 position, TextAlignment alignment, glm::vec4 color, bool visible)
 	{
 		TextElement* textElement = new TextElement;
 		textElement->text = text;
@@ -43,6 +43,7 @@ namespace UI
 		//textElement->position.x *= (float)renderer->width / (float)renderer->height;
 		textElement->color = color;
 		textElement->alignment = alignment;
+		textElement->visible = visible;
 		textElements[name] = textElement;
 	}
 

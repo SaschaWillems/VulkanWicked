@@ -19,6 +19,7 @@
 #include "Cell.h"
 #include "Player.h"
 #include "Guardian.h"
+#include "UI/GameUI.h"
 
 class Game: public GameInputListener, public RenderObject
 {

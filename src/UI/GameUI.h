@@ -34,7 +34,7 @@ namespace UI
         ~GameUI();
         void addFont(std::string name);
         void setfont(std::string name);
-        void addTextElement(std::string name, std::string text, glm::vec3 position, TextAlignment alignment, glm::vec4 color = glm::vec4(1.0f));
+        void addTextElement(std::string name, std::string text, glm::vec3 position, TextAlignment alignment, glm::vec4 color = glm::vec4(1.0f), bool visible = true);
         TextElement* getTextElement(std::string name);
         void prepareGPUResources();
         void updateGPUResources();

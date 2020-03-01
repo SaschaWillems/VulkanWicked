@@ -94,6 +94,11 @@ void Game::onKeyPress(SDL_Keycode keyCode)
 	{
 	case SDLK_p:
 		paused = !paused;
+		//@todo
+		gameUI->getTextElement("pause")->visible = paused;
+		break;
+	case SDLK_F1:
+		renderer->settings.debugoverlay = !renderer->settings.debugoverlay;
 		break;
 	}
 }

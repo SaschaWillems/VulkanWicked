@@ -127,7 +127,7 @@ public:
 		bool validation = false;
 		bool fullscreen = false;
 		bool vsync = false;
-		bool overlay = true;
+		bool debugoverlay = false;
 	} settings;
 
 	static std::vector<const char*> args;

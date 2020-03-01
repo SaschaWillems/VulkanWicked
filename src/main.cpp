@@ -29,6 +29,7 @@
 #include "GameInput.h"
 
 #include "DebugUI.h"
+#include "UI/GameUI.h"
 
 Game* game;
 Player* player;
@@ -43,6 +44,13 @@ void init()
 {
 	debugUI = new DebugUI();
 	debugUI->setRenderer(renderer);
+
+	gameUI = new UI::GameUI();
+	gameUI->setRenderer(renderer);
+	gameUI->addFont("Raleway-Bold");
+	gameUI->setfont("Raleway-Bold");
+	gameUI->addTextElement("player_score", "0500", glm::vec3(0.0f), UI::TextAlignment::TopLeft, glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+	gameUI->addTextElement("pause", "Paused", glm::vec3(0.5f, 0.5f, 0.0f), UI::TextAlignment::Center, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f), false);
 
 	game = new Game();
 	game->setRenderer(renderer);
@@ -189,7 +197,10 @@ void buildCommandBuffer()
 	cb->bindDescriptorSets(renderer->getPipelineLayout("deferred_composition"), { renderer->deferredComposition.descriptorSet }, 0);
 	cb->bindPipeline(renderer->getPipeline(game->paused ? "composition_paused" : "composition"));
 	cb->draw(6, 1, 0, 0);
-	debugUI->draw(cb);
+	if (renderer->settings.debugoverlay) {
+		debugUI->draw(cb);
+	}
+	gameUI->draw(cb);
 	cb->endRenderPass();
 
 	cb->end();
@@ -241,11 +252,13 @@ int SDL_main(int argc, char* argv[])
 	player->prepareGPUResources();
 	guardian->prepareGPUResources();
 	tarotDeck->prepareGPUResources();
+	gameUI->prepareGPUResources();
 
 	renderer->camera.updateGPUResources();
 	player->updateGPUResources();
 	guardian->updateGPUResources();
 	tarotDeck->updateGPUResources();
+	gameUI->updateGPUResources();
 
 	bool minimized = false;
 	bool quit = false;
@@ -298,6 +311,7 @@ int SDL_main(int argc, char* argv[])
 			guardian->update(timeStep);
 			tarotDeck->update(timeStep);
 		}
+		gameUI->updateGPUResources();
 	}
 
 	delete playingField;
@@ -305,6 +319,7 @@ int SDL_main(int argc, char* argv[])
 	delete player;
 	delete guardian;
 	delete debugUI;
+	delete gameUI;
 	delete renderer;
 	delete input;
 

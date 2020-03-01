@@ -616,6 +616,17 @@ void VulkanRenderer::setupLayouts()
 	pipelineLayout->addPushConstantRange(sizeof(vkglTF::PushConstBlockMaterial), 0, VK_SHADER_STAGE_FRAGMENT_BIT);
 	pipelineLayout->create();
 
+	// Game UI
+	// Single image binding point
+	descriptorSetLayout = addDescriptorSetLayout("ui_text");
+	descriptorSetLayout->addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+	descriptorSetLayout->create();
+
+	pipelineLayout = addPipelineLayout("ui_text");
+	pipelineLayout->addLayout(getDescriptorSetLayout("ui_text"));
+	pipelineLayout->addPushConstantRange(sizeof(glm::vec2) * 2, 0, VK_SHADER_STAGE_VERTEX_BIT);
+	pipelineLayout->create();
+
 	// Deferred composition
 	descriptorSetLayout = addDescriptorSetLayout("deferred_composition");
 	descriptorSetLayout->addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
@@ -746,6 +757,9 @@ VkFormat formatEnum(const std::string& value)
 	}
 	if (value == "VK_FORMAT_R32G32B32_SFLOAT") {
 		return VK_FORMAT_R32G32B32_SFLOAT;
+	}
+	if (value == "VK_FORMAT_R32G32B32A32_SFLOAT") {
+		return VK_FORMAT_R32G32B32A32_SFLOAT;
 	}
 }
 
