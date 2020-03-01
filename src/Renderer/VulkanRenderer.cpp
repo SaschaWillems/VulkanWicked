@@ -238,7 +238,8 @@ VulkanRenderer::VulkanRenderer()
 	deferredComposition.descriptorSet->addDescriptor(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &offscreenPass.position.descriptor);
 	deferredComposition.descriptorSet->addDescriptor(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &offscreenPass.normal.descriptor);
 	deferredComposition.descriptorSet->addDescriptor(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &offscreenPass.albedo.descriptor);
-	deferredComposition.descriptorSet->addDescriptor(3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &deferredComposition.lightsBuffer.descriptor);
+	deferredComposition.descriptorSet->addDescriptor(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &offscreenPass.material.descriptor);
+	deferredComposition.descriptorSet->addDescriptor(4, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &deferredComposition.lightsBuffer.descriptor);
 	deferredComposition.descriptorSet->create();
 
 	// Camera
@@ -451,7 +452,8 @@ void VulkanRenderer::setupOffscreenRenderPass()
 		{ 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
 		{ 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
 		{ 2, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
-		{ 3, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL }
+		{ 3, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
+		{ 4, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL }
 	};
 
 	RenderPass* renderPass = addRenderPass("offscreen");
@@ -504,6 +506,17 @@ void VulkanRenderer::setupOffscreenRenderPass()
 		VK_IMAGE_LAYOUT_UNDEFINED,
 		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		});
+	renderPass->addAttachmentDescription({
+		0,
+		VK_FORMAT_R8_UINT,
+		VK_SAMPLE_COUNT_1_BIT,
+		VK_ATTACHMENT_LOAD_OP_CLEAR,
+		VK_ATTACHMENT_STORE_OP_STORE,
+		VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		VK_IMAGE_LAYOUT_UNDEFINED,
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		});
 	// Depth attachment
 	renderPass->addAttachmentDescription({
 		0,
@@ -540,7 +553,8 @@ void VulkanRenderer::setupOffscreenRenderPass()
 	renderPass->setColorClearValue(0, { 0.0f, 0.0f, 0.0f, 0.0f });
 	renderPass->setColorClearValue(1, { 0.0f, 0.0f, 0.0f, 0.0f });
 	renderPass->setColorClearValue(2, { 0.0f, 0.0f, 0.0f, 0.0f });
-	renderPass->setDepthStencilClearValue(3, 1.0f, 0);
+	renderPass->setColorClearValue(3, { 0.0f, 0.0f, 0.0f, 0.0f });
+	renderPass->setDepthStencilClearValue(4, 1.0f, 0);
 	renderPass->create();
 
 	offscreenPass.width = width;
@@ -568,6 +582,7 @@ void VulkanRenderer::setupOffscreenRenderPass()
 	createFrameBufferImage(offscreenPass.position, FramebufferType::Color, VK_FORMAT_R16G16B16A16_SFLOAT);
 	createFrameBufferImage(offscreenPass.normal, FramebufferType::Color, VK_FORMAT_R16G16B16A16_SFLOAT);
 	createFrameBufferImage(offscreenPass.albedo, FramebufferType::Color, VK_FORMAT_R8G8B8A8_UNORM);
+	createFrameBufferImage(offscreenPass.material, FramebufferType::Color, VK_FORMAT_R8_UINT);
 	createFrameBufferImage(offscreenPass.depth, FramebufferType::DepthStencil, fbDepthFormat);
 
 	/* Framebuffers */
@@ -576,6 +591,7 @@ void VulkanRenderer::setupOffscreenRenderPass()
 		offscreenPass.position.view->handle,
 		offscreenPass.normal.view->handle,
 		offscreenPass.albedo.view->handle,
+		offscreenPass.material.view->handle,
 		offscreenPass.depth.view->handle
 	};
 
@@ -632,7 +648,8 @@ void VulkanRenderer::setupLayouts()
 	descriptorSetLayout->addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 	descriptorSetLayout->addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 	descriptorSetLayout->addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
-	descriptorSetLayout->addBinding(3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT);
+	descriptorSetLayout->addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+	descriptorSetLayout->addBinding(4, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT);
 	descriptorSetLayout->create();
 
 	pipelineLayout = addPipelineLayout("deferred_composition");
@@ -835,6 +852,7 @@ Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 	else {
 		// Default setup is based on G-Buffer passes (filling three attachments)
 		blendAttachmentStates = {
+			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
 			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
 			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
 			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE)

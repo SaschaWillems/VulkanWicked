@@ -4,7 +4,7 @@
     "renderpass": "offscreen",
     "shaders" : [
         "spore.vert.spv",
-        "default_model.frag.spv"
+        "spore.frag.spv"
     ],
     "vertexInputState": {
         "vertexBindingDescriptions": [

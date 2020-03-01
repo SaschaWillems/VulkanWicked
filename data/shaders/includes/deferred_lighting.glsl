@@ -2,11 +2,13 @@
 vec3 fragPos = texture(samplerposition, inUV).rgb;
 vec3 normal = texture(samplerNormal, inUV).rgb;
 vec4 albedo = texture(samplerAlbedo, inUV);
+uint material = texture(samplerMaterial, inUV).r;
 	
-#define ambient 0.05	
+const float ambient = albedo.a;
 
 vec3 fragcolor  = albedo.rgb * ambient;
-if (albedo.a < 1.0f) 
+
+if (material == MATERIAL_DEFAULT || material == MATERIAL_SPORE)
 {
 	for(int i = 0; i < ubo.numLights; ++i)
 	{
@@ -19,8 +21,9 @@ if (albedo.a < 1.0f)
 		vec3 diffuse = max(dot(normalize(normal), lightDir), 0.0f) * albedo.rgb * ubo.lights[i].color * atten;
 		fragcolor += diffuse;
 	}
-} 
-else 
+}
+
+if (material == MATERIAL_TAROT_CARD)
 {
 	fragcolor.rgb = albedo.rgb;
 }

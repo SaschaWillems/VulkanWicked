@@ -8,27 +8,8 @@
 
 #extension GL_GOOGLE_include_directive : enable
 
-layout (binding = 0) uniform sampler2D samplerposition;
-layout (binding = 1) uniform sampler2D samplerNormal;
-layout (binding = 2) uniform sampler2D samplerAlbedo;
-
-layout (location = 0) in vec2 inUV;
-
-layout (location = 0) out vec4 outFragcolor;
-
-struct Light {
-	vec4 position;
-	vec3 color;
-	float radius;
-};
-
-layout (binding = 3) uniform UBO 
-{
-	Light lights[512];
-	vec4 viewPos;
-	int numLights;
-} ubo;
-
+#include "includes/material_ids.glsl"
+#include "includes/deferred_lighting_inputs.glsl"
 
 void main() 
 {

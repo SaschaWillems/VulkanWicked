@@ -155,7 +155,7 @@ public:
 
 	struct OffscreenPass {
 		int32_t width, height;
-		FrameBufferAttachment position, normal, albedo, depth;
+		FrameBufferAttachment position, normal, albedo, depth, material;
 		VkFramebuffer frameBuffer;
 		VkSampler sampler;
 	} offscreenPass;
