@@ -165,9 +165,7 @@ void PlayingField::prepareGPUResources()
 
 	// @todo: staging, ring-buffer, etc.
 	const uint32_t dim = width * height;
-	VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &instanceBuffer, sizeof(InstanceData) * dim));
-	VK_CHECK_RESULT(instanceBuffer.map());
-
+	VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &instanceBuffer, sizeof(InstanceData) * dim));
 	// Init instance data
 	std::vector<InstanceData> instanceData(width * height);
 	for (uint32_t x = 0; x < width; x++) {

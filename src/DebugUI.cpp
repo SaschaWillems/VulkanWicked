@@ -67,16 +67,8 @@ void DebugUI::prepareGPUResources(const VkPipelineCache pipelineCache, RenderPas
 
 	// Staging buffers for font data upload
 	Buffer stagingBuffer;
-
-	VK_CHECK_RESULT(renderer->device->createBuffer(
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		&stagingBuffer,
-		uploadSize));
-
-	stagingBuffer.map();
+	VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, &stagingBuffer, uploadSize));
 	memcpy(stagingBuffer.mapped, fontData, uploadSize);
-	stagingBuffer.unmap();
 
 	// Copy buffer data to font image
 	VkCommandBuffer copyCmd = renderer->device->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
@@ -230,22 +222,17 @@ void DebugUI::updateGPUResources()
 
 	// Vertex buffer
 	if ((vertexBuffer.buffer == VK_NULL_HANDLE) || (vertexCount != imDrawData->TotalVtxCount)) {
-		vertexBuffer.unmap();
 		vertexBuffer.destroy();
-		VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &vertexBuffer, vertexBufferSize));
+		VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &vertexBuffer, vertexBufferSize));
 		vertexCount = imDrawData->TotalVtxCount;
-		vertexBuffer.unmap();
-		vertexBuffer.map();
 	}
 
 	// Index buffer
 	VkDeviceSize indexSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
 	if ((indexBuffer.buffer == VK_NULL_HANDLE) || (indexCount < imDrawData->TotalIdxCount)) {
-		indexBuffer.unmap();
 		indexBuffer.destroy();
-		VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &indexBuffer, indexBufferSize));
+		VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &indexBuffer, indexBufferSize));
 		indexCount = imDrawData->TotalIdxCount;
-		indexBuffer.map();
 	}
 
 	// Upload data
@@ -466,6 +453,23 @@ void DebugUI::render()
 	ImGui::InputFloat("playerProjectileSpeed", &gameState->values.playerProjectileSpeed, 0.1f, 1.0f, 2);
 	ImGui::PopItemWidth();
 	ImGui::End();
+
+	ImGui::SetNextWindowPos(ImVec2(80, 80), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("Renderer", nullptr, ImGuiWindowFlags_None);
+	if (ImGui::Button("Export VMA stats", btnSize)) {
+		char* statsStr;
+		std::ofstream ofstream;
+		ofstream.open("vmastats.json");
+		if (ofstream.is_open()) {
+			vmaBuildStatsString(renderer->device->vmaAllocator, &statsStr, VK_TRUE);
+			ofstream << statsStr;
+			vmaFreeStatsString(renderer->device->vmaAllocator, statsStr);
+			ofstream.close();
+		}
+	}
+	ImGui::End();
+
 
 	ImGui::EndFrame();
 	ImGui::Render();

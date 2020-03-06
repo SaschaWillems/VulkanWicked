@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "vulkan/vulkan.h"
+#include "Buffer.h"
 #include "Device.h"
 
 #define GLM_FORCE_RADIANS
@@ -167,11 +168,9 @@ namespace vkglTF
 		BoundingBox aabb;
 
 		struct UniformBuffer {
-			VkBuffer buffer;
-			VkDeviceMemory memory;
+			Buffer buffer;
 			VkDescriptorBufferInfo descriptor;
 			VkDescriptorSet descriptorSet;
-			void* mapped;
 		} uniformBuffer;
 
 		struct UniformBlock {
@@ -274,15 +273,9 @@ namespace vkglTF
 			glm::vec4 weight0;
 		};
 
-		struct Vertices {
-			VkBuffer buffer = VK_NULL_HANDLE;
-			VkDeviceMemory memory;
-		} vertices;
-		struct Indices {
-			int count;
-			VkBuffer buffer = VK_NULL_HANDLE;
-			VkDeviceMemory memory;
-		} indices;
+		Buffer vertices;
+		Buffer indices;
+		uint32_t indexCount;
 
 		glm::mat4 aabb;
 

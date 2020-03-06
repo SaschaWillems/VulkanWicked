@@ -10,10 +10,12 @@
 
 #include "vulkan/vulkan.h"
 #include "VulkanTools.h"
+#include "vk_mem_alloc.h"
 
 class Buffer
 {
 public:
+	VmaAllocator* vmaAllocator = nullptr;
 	VkDevice device;
 	VkBuffer buffer = VK_NULL_HANDLE;
 	VkDeviceMemory memory = VK_NULL_HANDLE;
@@ -23,6 +25,7 @@ public:
 	void* mapped = nullptr;
 	VkBufferUsageFlags usageFlags;
 	VkMemoryPropertyFlags memoryPropertyFlags;
+	VmaAllocation vmaAllocation;
 	VkResult map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 	void unmap();
 	VkResult bind(VkDeviceSize offset = 0);

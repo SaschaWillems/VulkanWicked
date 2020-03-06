@@ -40,12 +40,18 @@ void Buffer::copyTo(void* data, VkDeviceSize size)
 
 VkResult Buffer::flush(VkDeviceSize size, VkDeviceSize offset)
 {
-	VkMappedMemoryRange mappedRange = {};
-	mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-	mappedRange.memory = memory;
-	mappedRange.offset = offset;
-	mappedRange.size = size;
-	return vkFlushMappedMemoryRanges(device, 1, &mappedRange);
+	// @todo: Temporary, remove after switching to vma
+	if (vmaAllocator) {
+		vmaFlushAllocation((VmaAllocator)*vmaAllocator, vmaAllocation, offset, size);
+	}
+	else {
+		VkMappedMemoryRange mappedRange = {};
+		mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+		mappedRange.memory = memory;
+		mappedRange.offset = offset;
+		mappedRange.size = size;
+		return vkFlushMappedMemoryRanges(device, 1, &mappedRange);
+	}
 }
 
 VkResult Buffer::invalidate(VkDeviceSize size, VkDeviceSize offset)
@@ -60,12 +66,17 @@ VkResult Buffer::invalidate(VkDeviceSize size, VkDeviceSize offset)
 
 void Buffer::destroy()
 {
-	if (buffer)
-	{
-		vkDestroyBuffer(device, buffer, nullptr);
+	if (vmaAllocator) {
+		vmaDestroyBuffer((VmaAllocator)*vmaAllocator, buffer, vmaAllocation);
 	}
-	if (memory)
-	{
-		vkFreeMemory(device, memory, nullptr);
+	else {
+		if (buffer)
+		{
+			vkDestroyBuffer(device, buffer, nullptr);
+		}
+		if (memory)
+		{
+			vkFreeMemory(device, memory, nullptr);
+		}
 	}
 }

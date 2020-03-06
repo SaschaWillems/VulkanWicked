@@ -229,8 +229,7 @@ VulkanRenderer::VulkanRenderer()
 	setupDescriptorPool();
 
 	// Deferred composition
-	VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &deferredComposition.lightsBuffer, sizeof(lightSources)));
-	VK_CHECK_RESULT(deferredComposition.lightsBuffer.map());
+	VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &deferredComposition.lightsBuffer, sizeof(lightSources)));
 
 	deferredComposition.descriptorSet = new DescriptorSet(device->handle);
 	deferredComposition.descriptorSet->setPool(descriptorPool);

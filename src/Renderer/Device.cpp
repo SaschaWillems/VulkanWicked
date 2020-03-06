@@ -5,6 +5,8 @@
  */
 
 #include "Device.h"
+#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
 
 Device::Device(VkPhysicalDevice physicalDevice)
 {
@@ -41,6 +43,7 @@ Device::~Device()
 	if (handle)
 	{
 		vkDestroyDevice(handle, nullptr);
+		vmaDestroyAllocator(vmaAllocator);
 	}
 }
 
@@ -228,85 +231,39 @@ VkResult Device::create(VkQueueFlags requestedQueueTypes)
 
 	this->enabledFeatures = enabledFeatures;
 
+	// Initialize Vulkan Memory allocator
+	VmaAllocatorCreateInfo allocatorInfo{};
+	allocatorInfo.device = handle;
+	allocatorInfo.physicalDevice = physicalDevice;
+	vmaCreateAllocator(&allocatorInfo, &vmaAllocator);
+
 	return result;
 }
 
-VkResult Device::createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, Buffer* buffer, VkDeviceSize size, void* data)
+VkResult Device::createBuffer(VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage, Buffer* buffer, VkDeviceSize size, void* data)
 {
-	buffer->device = handle;
+	VkBufferCreateInfo bufferCI{};
+	bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferCI.usage = usageFlags;
+	bufferCI.size = size;
 
-	// Create the buffer handle
-	VkBufferCreateInfo bufferCreateInfo = vks::initializers::bufferCreateInfo(usageFlags, size);
-	VK_CHECK_RESULT(vkCreateBuffer(handle, &bufferCreateInfo, nullptr, &buffer->buffer));
+	VmaAllocationCreateInfo allocCI{};
+	allocCI.usage = memoryUsage;
+	allocCI.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-	// Create the memory backing up the buffer handle
-	VkMemoryRequirements memReqs;
-	VkMemoryAllocateInfo memAlloc = vks::initializers::memoryAllocateInfo();
-	vkGetBufferMemoryRequirements(handle, buffer->buffer, &memReqs);
-	memAlloc.allocationSize = memReqs.size;
-	// Find a memory type index that fits the properties of the buffer
-	memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
-	VK_CHECK_RESULT(vkAllocateMemory(handle, &memAlloc, nullptr, &buffer->memory));
+	VmaAllocationInfo allocInfo{};
+	VK_CHECK_RESULT(vmaCreateBuffer(vmaAllocator, &bufferCI, &allocCI, &buffer->buffer, &buffer->vmaAllocation, &allocInfo));
 
-	buffer->alignment = memReqs.alignment;
-	buffer->size = memAlloc.allocationSize;
-	buffer->usageFlags = usageFlags;
-	buffer->memoryPropertyFlags = memoryPropertyFlags;
+	buffer->mapped = allocInfo.pMappedData;
+	buffer->vmaAllocator = &vmaAllocator;
 
-	// If a pointer to the buffer data has been passed, map the buffer and copy over the data
 	if (data != nullptr)
 	{
-		VK_CHECK_RESULT(buffer->map());
 		memcpy(buffer->mapped, data, size);
-		if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
-			buffer->flush();
-
-		buffer->unmap();
+		// @todo: flush non-coherent
 	}
 
-	// Initialize a default descriptor that covers the whole buffer size
 	buffer->setupDescriptor();
-
-	// Attach the memory to the buffer object
-	return buffer->bind();
-}
-
-VkResult Device::createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, VkBuffer* buffer, VkDeviceMemory* memory, void* data)
-{
-	// Create the buffer handle
-	VkBufferCreateInfo bufferCreateInfo = vks::initializers::bufferCreateInfo(usageFlags, size);
-	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	VK_CHECK_RESULT(vkCreateBuffer(handle, &bufferCreateInfo, nullptr, buffer));
-
-	// Create the memory backing up the buffer handle
-	VkMemoryRequirements memReqs;
-	VkMemoryAllocateInfo memAlloc = vks::initializers::memoryAllocateInfo();
-	vkGetBufferMemoryRequirements(handle, *buffer, &memReqs);
-	memAlloc.allocationSize = memReqs.size;
-	// Find a memory type index that fits the properties of the buffer
-	memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
-	VK_CHECK_RESULT(vkAllocateMemory(handle, &memAlloc, nullptr, memory));
-
-	// If a pointer to the buffer data has been passed, map the buffer and copy over the data
-	if (data != nullptr)
-	{
-		void* mapped;
-		VK_CHECK_RESULT(vkMapMemory(handle, *memory, 0, size, 0, &mapped));
-		memcpy(mapped, data, size);
-		// If host coherency hasn't been requested, do a manual flush to make writes visible
-		if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
-		{
-			VkMappedMemoryRange mappedRange = vks::initializers::mappedMemoryRange();
-			mappedRange.memory = *memory;
-			mappedRange.offset = 0;
-			mappedRange.size = size;
-			vkFlushMappedMemoryRanges(handle, 1, &mappedRange);
-		}
-		vkUnmapMemory(handle, *memory);
-	}
-
-	// Attach the memory to the buffer object
-	VK_CHECK_RESULT(vkBindBufferMemory(handle, *buffer, *memory, 0));
 
 	return VK_SUCCESS;
 }

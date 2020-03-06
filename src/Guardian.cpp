@@ -26,9 +26,7 @@ LightSource Guardian::getLightSource()
 
 void Guardian::prepareGPUResources()
 {
-    VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &ubo, sizeof(glm::mat4)));
-    VK_CHECK_RESULT(ubo.map());
-
+    VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &ubo, sizeof(glm::mat4)));
     descriptorSet = new DescriptorSet(renderer->device->handle);
     descriptorSet->setPool(renderer->descriptorPool);
     descriptorSet->addLayout(renderer->getDescriptorSetLayout("single_ubo"));

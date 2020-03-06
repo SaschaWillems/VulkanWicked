@@ -187,9 +187,7 @@ bool Camera::updatePad(glm::vec2 axisLeft, glm::vec2 axisRight, float deltaTime)
 void Camera::prepareGPUResources(Device* device)
 {
 	this->device = device;
-	VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &ubo, sizeof(glm::mat4) * 2));
-	VK_CHECK_RESULT(ubo.map());
-
+	VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &ubo, sizeof(glm::mat4) * 2));
 }
 
 void Camera::updateGPUResources() {

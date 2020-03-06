@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <fstream>
 #include "imgui.h"
 #include "GameState.h"
 #include "GameInput.h"
@@ -26,6 +27,7 @@
 #include "Renderer/Image.h"
 #include "Renderer/ImageView.h"
 #include "Renderer/Sampler.h"
+#include "vk_mem_alloc.h"
 
 class DebugUI: public RenderObject
 {

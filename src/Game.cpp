@@ -181,9 +181,7 @@ void Game::updateProjectiles(float dT)
 
 void Game::prepareGPUResources()
 {
-	VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &projectilesUbo, gameState->values.maxNumProjectiles * sizeof(glm::vec4)));
-	VK_CHECK_RESULT(projectilesUbo.map());
-
+	VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &projectilesUbo, gameState->values.maxNumProjectiles * sizeof(glm::vec4)));
 	descriptorSetProjectiles = new DescriptorSet(renderer->device->handle);
 	descriptorSetProjectiles->setPool(renderer->descriptorPool);
 	descriptorSetProjectiles->addLayout(renderer->getDescriptorSetLayout("single_ubo"));

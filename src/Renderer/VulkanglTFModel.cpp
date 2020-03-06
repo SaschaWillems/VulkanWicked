@@ -311,18 +311,14 @@ namespace vkglTF
 			this->uniformBlock.matrix = matrix;
 			VK_CHECK_RESULT(device->createBuffer(
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				sizeof(uniformBlock),
+				VMA_MEMORY_USAGE_CPU_TO_GPU,
 				&uniformBuffer.buffer,
-				&uniformBuffer.memory,
+				sizeof(uniformBlock),
 				&uniformBlock));
-			VK_CHECK_RESULT(vkMapMemory(device->handle, uniformBuffer.memory, 0, sizeof(uniformBlock), 0, &uniformBuffer.mapped));
-			uniformBuffer.descriptor = { uniformBuffer.buffer, 0, sizeof(uniformBlock) };
 		};
 
 		Mesh::~Mesh() {
-			vkDestroyBuffer(device->handle, uniformBuffer.buffer, nullptr);
-			vkFreeMemory(device->handle, uniformBuffer.memory, nullptr);
+			uniformBuffer.buffer.destroy();
 			for (Primitive* p : primitives)
 				delete p;
 		}
@@ -362,10 +358,10 @@ namespace vkglTF
 						mesh->uniformBlock.jointMatrix[i] = jointMat;
 					}
 					mesh->uniformBlock.jointcount = (float)numJoints;
-					memcpy(mesh->uniformBuffer.mapped, &mesh->uniformBlock, sizeof(mesh->uniformBlock));
+					memcpy(mesh->uniformBuffer.buffer.mapped, &mesh->uniformBlock, sizeof(mesh->uniformBlock));
 				}
 				else {
-					memcpy(mesh->uniformBuffer.mapped, &m, sizeof(glm::mat4));
+					memcpy(mesh->uniformBuffer.buffer.mapped, &m, sizeof(glm::mat4));
 				}
 			}
 
@@ -1050,32 +1046,27 @@ namespace vkglTF
 
 			size_t vertexBufferSize = vertexBuffer.size() * sizeof(Vertex);
 			size_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
-			indices.count = static_cast<uint32_t>(indexBuffer.size());
+			indexCount = static_cast<uint32_t>(indexBuffer.size());
 
 			assert(vertexBufferSize > 0);
 
-			struct StagingBuffer {
-				VkBuffer buffer;
-				VkDeviceMemory memory;
-			} vertexStaging, indexStaging;
+			Buffer vertexStaging, indexStaging;
 
 			// Create staging buffers
 			// Vertex data
 			VK_CHECK_RESULT(device->createBuffer(
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+				VMA_MEMORY_USAGE_CPU_ONLY,
+				&vertexStaging,
 				vertexBufferSize,
-				&vertexStaging.buffer,
-				&vertexStaging.memory,
 				vertexBuffer.data()));
 			// Index data
 			if (indexBufferSize > 0) {
 				VK_CHECK_RESULT(device->createBuffer(
 					VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+					VMA_MEMORY_USAGE_CPU_ONLY,
+					&indexStaging,
 					indexBufferSize,
-					&indexStaging.buffer,
-					&indexStaging.memory,
 					indexBuffer.data()));
 			}
 
@@ -1083,18 +1074,16 @@ namespace vkglTF
 			// Vertex buffer
 			VK_CHECK_RESULT(device->createBuffer(
 				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				vertexBufferSize,
-				&vertices.buffer,
-				&vertices.memory));
+				VMA_MEMORY_USAGE_GPU_ONLY,
+				&vertices,
+				vertexBufferSize));
 			// Index buffer
 			if (indexBufferSize > 0) {
 				VK_CHECK_RESULT(device->createBuffer(
 					VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-					indexBufferSize,
-					&indices.buffer,
-					&indices.memory));
+					VMA_MEMORY_USAGE_GPU_ONLY,
+					&indices,
+					indexBufferSize));
 			}
 
 			// Copy from staging buffers

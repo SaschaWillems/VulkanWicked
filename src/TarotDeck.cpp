@@ -28,13 +28,9 @@ void TarotDeck::setState(TarotDeckState newState)
 
 void TarotDeck::prepareGPUResources()
 {
-	VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &ubo, sizeof(glm::mat4)));
-	VK_CHECK_RESULT(ubo.map());
-
+	VK_CHECK_RESULT(renderer->device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &ubo, sizeof(glm::mat4)));
 	descriptorSets.resize(3);
-
 	descriptorSets[0] = renderer->descriptorSets.camera;
-
 	descriptorSets[1] = new DescriptorSet(renderer->device->handle);
 	descriptorSets[1]->setPool(renderer->descriptorPool);
 	descriptorSets[1]->addLayout(renderer->getDescriptorSetLayout("single_ubo"));
