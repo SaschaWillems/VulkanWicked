@@ -231,6 +231,10 @@ void updateLights()
 
 int SDL_main(int argc, char* argv[])
 {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
+		std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
+		return -1;
+	}
 
 	for (int32_t i = 0; i < __argc; i++) {
 		VulkanRenderer::args.push_back(__argv[i]);

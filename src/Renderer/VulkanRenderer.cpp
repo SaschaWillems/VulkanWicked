@@ -140,11 +140,6 @@ VulkanRenderer::VulkanRenderer()
 		freopen_s(&stream, "CONOUT$", "w+", stderr);
 	}
 #endif
-
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
-		std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
-		return;
-	}
 	window = SDL_CreateWindow("Vulkan Wicked", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN);
 	if (settings.fullscreen) {
 		SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);

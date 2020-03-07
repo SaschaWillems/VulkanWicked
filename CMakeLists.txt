@@ -14,6 +14,7 @@ include_directories(external/gli)
 include_directories(external/imgui)
 include_directories(external/tinygltf)
 include_directories(external/sdl/include)
+include_directories(external/sdl2_mixer/include)
 include_directories(external/VulkanMemoryAllocator/src)
 include_directories(${KTX_DIR}/include)
 include_directories(${KTX_DIR}/lib)
@@ -32,6 +33,9 @@ endif()
 
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
+
+find_package(SDL_mixer REQUIRED)
+include_directories(${SDL_MIXER_INCLUDE_DIRS})
 
 IF(WIN32)
 	IF (NOT Vulkan_FOUND)
