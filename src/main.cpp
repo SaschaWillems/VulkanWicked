@@ -295,7 +295,9 @@ int SDL_main(int argc, char* argv[])
 
 		renderer->waitSync();
 
-		debugUI->render();
+		if (renderer->settings.debugoverlay) {
+			debugUI->render();
+		}
 		buildCommandBuffer();
 
 		input->update();
