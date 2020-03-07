@@ -12,6 +12,10 @@ void AssetManager::addModelsFolder(std::string folder)
 {
 	for (const auto& file : std::filesystem::directory_iterator(assetPath + folder)) {
 		const std::string name = file.path().stem().string();
+		const std::string ext = file.path().extension().string();
+		if (ext != ".gltf") {
+			continue;
+		}
 		vkglTF::Model* model = new vkglTF::Model();
 		model->loadFromFile(file.path().string(), device, transferQueue);
 		models[name] = model;
