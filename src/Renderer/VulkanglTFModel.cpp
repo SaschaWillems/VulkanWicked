@@ -11,6 +11,10 @@
 
 namespace vkglTF
 {
+	VkDescriptorSetLayout materialDescriptorSetLayout = VK_NULL_HANDLE;
+	VkDescriptorPool materialDescriptorPool = VK_NULL_HANDLE;
+	VkDescriptorImageInfo emptyTextureImageDescriptor;
+
 	PushConstBlockMaterial pushConstBlockMaterial;
 
 	BoundingBox BoundingBox::getAABB(glm::mat4 m) {
@@ -787,6 +791,7 @@ namespace vkglTF
 		{
 			for (tinygltf::Material& mat : gltfModel.materials) {
 				vkglTF::Material material{};
+				material.device = device;
 				if (mat.values.find("baseColorTexture") != mat.values.end()) {
 					material.baseColorTexture = &textures[mat.values["baseColorTexture"].TextureIndex()];
 					material.texCoordSets.baseColor = mat.values["baseColorTexture"].TextureTexCoord();
@@ -864,7 +869,7 @@ namespace vkglTF
 						}
 					}
 				}
-
+				material.createDescriptorSet();
 				materials.push_back(material);
 			}
 			// Push a default material at the end of the list for meshes with no material assigned
@@ -1038,7 +1043,7 @@ namespace vkglTF
 			}
 			else {
 				// TODO: throw
-				std::cerr << "Could not load gltf file: " << error << std::endl;
+				std::cerr << "Could not load gltf file " << filename << ": " << error << std::endl;
 				return;
 			}
 
@@ -1184,6 +1189,68 @@ namespace vkglTF
 			}
 		}
 
+		void Model::drawNodeWithMaterial(Node* node, VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t firstInstance)
+		{
+			if (node->mesh) {
+				for (Primitive* primitive : node->mesh->primitives) {
+
+					// @todo: Pass frist set
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, 1, &primitive->material.descriptorSet, 0, nullptr);
+
+					// Pass material parameters as push constants
+					PushConstBlockMaterial pushConstBlockMaterial{};
+					pushConstBlockMaterial.emissiveFactor = primitive->material.emissiveFactor;
+					// To save push constant space, availabilty and texture coordiante set are combined
+					// -1 = texture not used for this material, >= 0 texture used and index of texture coordinate set
+					pushConstBlockMaterial.colorTextureSet = primitive->material.baseColorTexture != nullptr ? primitive->material.texCoordSets.baseColor : -1;
+					pushConstBlockMaterial.normalTextureSet = primitive->material.normalTexture != nullptr ? primitive->material.texCoordSets.normal : -1;
+					pushConstBlockMaterial.occlusionTextureSet = primitive->material.occlusionTexture != nullptr ? primitive->material.texCoordSets.occlusion : -1;
+					pushConstBlockMaterial.emissiveTextureSet = primitive->material.emissiveTexture != nullptr ? primitive->material.texCoordSets.emissive : -1;
+					pushConstBlockMaterial.alphaMask = static_cast<float>(primitive->material.alphaMode == vkglTF::Material::ALPHAMODE_MASK);
+					pushConstBlockMaterial.alphaMaskCutoff = primitive->material.alphaCutoff;
+
+					// TODO: glTF specs states that metallic roughness should be preferred, even if specular glosiness is present
+
+					if (primitive->material.pbrWorkflows.metallicRoughness) {
+						// Metallic roughness workflow
+						pushConstBlockMaterial.workflow = static_cast<float>(PBR_WORKFLOW_METALLIC_ROUGHNESS);
+						pushConstBlockMaterial.baseColorFactor = primitive->material.baseColorFactor;
+						pushConstBlockMaterial.metallicFactor = primitive->material.metallicFactor;
+						pushConstBlockMaterial.roughnessFactor = primitive->material.roughnessFactor;
+						pushConstBlockMaterial.PhysicalDescriptorTextureSet = primitive->material.metallicRoughnessTexture != nullptr ? primitive->material.texCoordSets.metallicRoughness : -1;
+						pushConstBlockMaterial.colorTextureSet = primitive->material.baseColorTexture != nullptr ? primitive->material.texCoordSets.baseColor : -1;
+					}
+
+					if (primitive->material.pbrWorkflows.specularGlossiness) {
+						// Specular glossiness workflow
+						pushConstBlockMaterial.workflow = static_cast<float>(PBR_WORKFLOW_SPECULAR_GLOSINESS);
+						pushConstBlockMaterial.PhysicalDescriptorTextureSet = primitive->material.extension.specularGlossinessTexture != nullptr ? primitive->material.texCoordSets.specularGlossiness : -1;
+						pushConstBlockMaterial.colorTextureSet = primitive->material.extension.diffuseTexture != nullptr ? primitive->material.texCoordSets.baseColor : -1;
+						pushConstBlockMaterial.diffuseFactor = primitive->material.extension.diffuseFactor;
+						pushConstBlockMaterial.specularFactor = glm::vec4(primitive->material.extension.specularFactor, 1.0f);
+					}
+
+					// @todo: Setter for material push constant offset, size, layout etc.
+					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstBlockMaterial), &pushConstBlockMaterial);
+
+					vkCmdDrawIndexed(commandBuffer, primitive->indexCount, 1, primitive->firstIndex, 0, firstInstance);
+				}
+			}
+			for (auto& child : node->children) {
+				drawNodeWithMaterial(child, commandBuffer, pipelineLayout);
+			}
+		}
+
+		void Model::drawWithMaterial(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t firstInstance)
+		{
+			const VkDeviceSize offsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertices.buffer, offsets);
+			vkCmdBindIndexBuffer(commandBuffer, indices.buffer, 0, VK_INDEX_TYPE_UINT32);
+			for (auto& node : nodes) {
+				drawNodeWithMaterial(node, commandBuffer, pipelineLayout, firstInstance);
+			}
+		}
+
 		void Model::calculateBoundingBox(Node* node, Node* parent) {
 			BoundingBox parentBvh = parent ? parent->bvh : BoundingBox(dimensions.min, dimensions.max);
 
@@ -1297,5 +1364,38 @@ namespace vkglTF
 				}
 			}
 			return nodeFound;
+		}
+
+		void Material::createDescriptorSet()
+		{
+			assert(materialDescriptorPool != VK_NULL_HANDLE);
+			assert(materialDescriptorSetLayout != VK_NULL_HANDLE);
+
+			VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
+			descriptorSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			descriptorSetAllocInfo.descriptorPool = materialDescriptorPool;
+			descriptorSetAllocInfo.pSetLayouts = &materialDescriptorSetLayout;
+			descriptorSetAllocInfo.descriptorSetCount = 1;
+			VK_CHECK_RESULT(vkAllocateDescriptorSets(device->handle, &descriptorSetAllocInfo, &descriptorSet));
+
+			std::vector<VkDescriptorImageInfo> imageDescriptors = {
+				baseColorTexture ? baseColorTexture->descriptor : emptyTextureImageDescriptor,
+				metallicRoughnessTexture ? metallicRoughnessTexture->descriptor : emptyTextureImageDescriptor,
+				normalTexture ? normalTexture->descriptor : emptyTextureImageDescriptor,
+				occlusionTexture ? occlusionTexture->descriptor : emptyTextureImageDescriptor,
+				emissiveTexture ? emissiveTexture->descriptor : emptyTextureImageDescriptor
+			};
+
+			std::array<VkWriteDescriptorSet, 5> writeDescriptorSets{};
+			for (size_t i = 0; i < imageDescriptors.size(); i++) {
+				writeDescriptorSets[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				writeDescriptorSets[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				writeDescriptorSets[i].descriptorCount = 1;
+				writeDescriptorSets[i].dstSet = descriptorSet;
+				writeDescriptorSets[i].dstBinding = static_cast<uint32_t>(i);
+				writeDescriptorSets[i].pImageInfo = &imageDescriptors[i];
+			}
+
+			vkUpdateDescriptorSets(device->handle, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
 		}
 }

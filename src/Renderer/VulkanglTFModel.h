@@ -41,6 +41,11 @@
 
 namespace vkglTF
 {
+	extern VkDescriptorSetLayout materialDescriptorSetLayout;
+	// @todo: One pool per model
+	extern VkDescriptorPool materialDescriptorPool;
+	extern VkDescriptorImageInfo emptyTextureImageDescriptor;
+
 	enum PBRWorkflows { PBR_WORKFLOW_METALLIC_ROUGHNESS = 0, PBR_WORKFLOW_SPECULAR_GLOSINESS = 1 };
 
 	struct PushConstBlockMaterial {
@@ -109,6 +114,7 @@ namespace vkglTF
 		glTF material class
 	*/
 	struct Material {
+		Device* device;
 		enum AlphaMode { ALPHAMODE_OPAQUE, ALPHAMODE_MASK, ALPHAMODE_BLEND };
 		AlphaMode alphaMode = ALPHAMODE_OPAQUE;
 		float alphaCutoff = 1.0f;
@@ -140,6 +146,7 @@ namespace vkglTF
 			bool specularGlossiness = false;
 		} pbrWorkflows;
 		VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+		void createDescriptorSet();
 	};
 
 	/*
@@ -309,6 +316,8 @@ namespace vkglTF
 		void bindBuffers(VkCommandBuffer commandBuffer);
 		void drawNodes(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t firstInstance = 0);
 		void draw(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t firstInstance = 0);
+		void drawNodeWithMaterial(Node* node, VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t firstInstance = 0);
+		void drawWithMaterial(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t firstInstance = 0);
 		void calculateBoundingBox(Node* node, Node* parent);
 		void getSceneDimensions();
 		void updateAnimation(uint32_t index, float time);
