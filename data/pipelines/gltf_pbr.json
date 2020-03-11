@@ -1,0 +1,53 @@
+{
+    "name": "gltf_pbr",
+    "layout": "gltf_pbr",
+    "renderpass": "offscreen",
+    "shaders" : [
+        "gltf_pbr.vert.spv",
+        "gltf_pbr.frag.spv"
+    ],
+    "colorBlendState": {
+        "blendAttachments": [
+            {
+              "colorWriteMask": 15,
+              "blendEnable": false 
+            },
+            {
+              "colorWriteMask": 15,
+              "blendEnable": false 
+            },
+            {
+              "colorWriteMask": 15,
+              "blendEnable": true,
+              "color": {
+                  "op": "VK_BLEND_OP_ADD",
+                  "srcFactor": "VK_BLEND_FACTOR_SRC_ALPHA",
+                  "dstFactor": "VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA"
+              },
+              "alpha": {
+                  "op": "VK_BLEND_OP_ADD",
+                  "srcFactor": "VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA",
+                  "dstFactor": "VK_BLEND_FACTOR_ZERO"
+              }
+            },
+            {
+                "colorWriteMask": 15,
+                "blendEnable": false 
+            },
+            {
+              "colorWriteMask": 15,
+              "blendEnable": true,
+              "color": {
+                  "op": "VK_BLEND_OP_ADD",
+                  "srcFactor": "VK_BLEND_FACTOR_SRC_ALPHA",
+                  "dstFactor": "VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA"
+              },
+              "alpha": {
+                  "op": "VK_BLEND_OP_ADD",
+                  "srcFactor": "VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA",
+                  "dstFactor": "VK_BLEND_FACTOR_ZERO"
+              }
+            }         
+        ]
+    }
+}   
