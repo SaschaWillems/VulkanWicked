@@ -123,6 +123,11 @@ void PlayingField::update(float dT)
 							continue;
 						}
 						// Grow random cell
+						// Growth chance decreases with distance
+						int growthChance = std::max(100.0f - ((currentDist - 1) * 50.0f), 10.0f);
+						if (randomFloat(100.0f) > growthChance) {
+							continue;
+						}
 						Cell* dstCell = cells[randomInt(static_cast<int32_t>(cells.size()))];
 						if (dstCell->sporeType == SporeType::Empty) {
 							dstCell->sporeType = (cell.sporeType == SporeType::Good_Portal) ? SporeType::Good : SporeType::Evil;
