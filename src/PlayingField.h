@@ -38,6 +38,7 @@ public:
 	Cell* cellFromVisualPos(glm::vec3 pos);
 	Cell* cellAt(glm::ivec2 pos);
 	void getCellsAtDistance(glm::ivec2 pos, uint32_t distance, std::vector<Cell*> &cells, bool skipDeadZone = true);
+	float getMaxCellZIndex(glm::ivec2 pos);
 	void prepareGPUResources();
 	void updateGPUResources();
 	void draw(CommandBuffer* cb);

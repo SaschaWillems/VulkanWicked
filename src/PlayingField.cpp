@@ -137,6 +137,8 @@ void PlayingField::update(float dT)
 						else {
 							if (dstCell->canGrow()) {
 								dstCell->grow();
+								// Bring forward
+								dstCell->zIndex = getMaxCellZIndex(dstCell->pos);
 								break;
 							}
 						}
@@ -226,6 +228,20 @@ void PlayingField::getCellsAtDistance(glm::ivec2 pos, uint32_t distance, std::ve
 	}
 }
 
+float PlayingField::getMaxCellZIndex(glm::ivec2 pos)
+{
+	float maxZ = cellAt(pos)->zIndex;
+	for (int32_t x = pos.x - 1; x <= pos.x + 1; x++) {
+		for (int32_t y = pos.y - 1; y <= pos.y + 1; y++) {
+			Cell* cell = cellAt(glm::ivec2(x, y));
+			if (cell && cell->zIndex > maxZ) {
+				maxZ = cell->zIndex;
+			}
+		}
+	}
+	return std::min(maxZ + 0.1f, 256.0f);
+}
+
 void PlayingField::prepareGPUResources()
 {
 	// @todo: proper sync
@@ -256,7 +272,7 @@ void PlayingField::updateGPUResources()
 			const uint32_t idx = (x * height) + y;
 			if (cells[x][y].sporeSize != instanceData[idx].scale) {
 				Cell& cell = cells[x][y];
-				instanceData[idx].pos = glm::vec3(cell.gridPos.x + cell.rndOffset.x, 1.0f, cell.gridPos.y + cell.rndOffset.y);
+				instanceData[idx].pos = glm::vec3(cell.gridPos.x + cell.rndOffset.x, 1.0f - cell.zIndex, cell.gridPos.y + cell.rndOffset.y);
 				instanceData[idx].scale = cell.sporeSize;
 				//if (cell.sporeType == SporeType::Good_Portal) {
 				//	instanceData[idx].pos.y = -2.0f;
