@@ -12,6 +12,7 @@
 #include "Renderer/CommandBuffer.h"
 #include "GameState.h"
 #include "Cell.h"
+#include "Utils.h"
 
 #pragma once
 class PlayingField: public RenderObject
@@ -35,6 +36,8 @@ public:
 	bool deadZone(uint32_t x, uint32_t y);
 	float distanceToSporeType(glm::vec2 pos, SporeType sporeType);
 	Cell* cellFromVisualPos(glm::vec3 pos);
+	Cell* cellAt(glm::ivec2 pos);
+	void getCellsAtDistance(glm::ivec2 pos, uint32_t distance, std::vector<Cell*> &cells);
 	void prepareGPUResources();
 	void updateGPUResources();
 	void draw(CommandBuffer* cb);
