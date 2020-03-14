@@ -37,7 +37,7 @@ public:
 	float distanceToSporeType(glm::vec2 pos, SporeType sporeType);
 	Cell* cellFromVisualPos(glm::vec3 pos);
 	Cell* cellAt(glm::ivec2 pos);
-	void getCellsAtDistance(glm::ivec2 pos, uint32_t distance, std::vector<Cell*> &cells);
+	void getCellsAtDistance(glm::ivec2 pos, uint32_t distance, std::vector<Cell*> &cells, bool skipDeadZone = true);
 	void prepareGPUResources();
 	void updateGPUResources();
 	void draw(CommandBuffer* cb);

@@ -81,63 +81,58 @@ void PlayingField::update(float dT)
 	}
 
 	// Growth
-	// @todo: maybe calculate from spore pov, check distance and connection to portal
-	// Spawn
-	const std::vector<glm::ivec2> offsets = { {0, -1}, {1, -1}, {1,  0}, {1,  1}, {0,  1}, {-1,  1}, {-1,  0}, {-1, -1} };
 	for (uint32_t x = 0; x < width; x++) {
 		for (uint32_t y = 0; y < height; y++) {
-			if (!deadZone(x, y)) {
-				Cell& cell = cells[x][y];
-				if (cell.sporeType == SporeType::Good_Portal || cell.sporeType == SporeType::Evil_Portal) {
-					// Reworked growth functionality based around portals (seems to be what the original is doing)
-					// If growth timer triggers, either spawn a new small spore in portals' range or grow an existing one
-					// Spawning is done in growing "rings" around the portal, once an inner ring is full, it's possible for spores to spawn on outer rings
-					// Next growth step increases y position ("pop" effect)
-					// @todo: outer ring
-					// @todo: Add some more randomization
-					cell.portalGrowTimer -= dT * gameState->values.portalGrowSpeed;
-					if (cell.portalGrowTimer <= 0.0f) {
-						// @todo: Add randomization;
-						cell.portalGrowTimer = gameState->values.portalGrowTimer;
-						// Get random cell to grow
-						// @todo: Move outwards
-						bool done = false;
-						int32_t maxDist = 3;
-						int32_t currentDist = 1;
-						int32_t t = 0;
-						std::vector<Cell*> cells;
-						// @todo: slow down growth chance based on current distance (1 = 100%, 2 = 50%, 3 = 25%, etc.)
-						while (!done) {
-							// Check if there is any cell at the current distance from the portal that's not fully grown
-							getCellsAtDistance(glm::ivec2(x, y), currentDist, cells);
-							// @todo: also take portals into account
-							bool skip = true;
-							for (auto dstCell : cells) {
-								if (dstCell && (dstCell->sporeType == SporeType::Empty || dstCell->sporeSize < SporeSize::Max)) {
-									skip = false;
-									break;
-								}
-							}
-							// Skip to next distance
-							if (skip) {
-								currentDist++;
-								if (currentDist > maxDist) {
-									break;
-								}
-								continue;
-							}
-							// Grow random cell
-							Cell* dstCell = cells[randomInt(static_cast<int32_t>(cells.size()))];
-							if (dstCell->sporeType == SporeType::Empty) {
-								dstCell->sporeType = (cell.sporeType == SporeType::Good_Portal) ? SporeType::Good : SporeType::Evil;
-								dstCell->sporeSize = SporeSize::Small;
+			Cell& cell = cells[x][y];
+			if (cell.sporeType == SporeType::Good_Portal || cell.sporeType == SporeType::Evil_Portal) {
+				// Reworked growth functionality based around portals (seems to be what the original is doing)
+				// If growth timer triggers, either spawn a new small spore in portals' range or grow an existing one
+				// Spawning is done in growing distance around the portal, once all spores at a given distance are maxed out, it's possible for spores to spawn further away
+				// @todo: Add some more randomization
+				// Portal growth timer speed depends on day/night cycle
+				if (cell.sporeType == SporeType::Good_Portal) {
+					cell.portalGrowTimer -= dT * ((gameState->phase == Phase::Day) ? gameState->values.portalGrowthSpeedFast : gameState->values.portalGrowthSpeedSlow) * gameState->values.portalGrowthFactorGood;
+				}
+				if (cell.sporeType == SporeType::Evil_Portal) {
+					cell.portalGrowTimer -= dT * ((gameState->phase == Phase::Night) ? gameState->values.portalGrowthSpeedFast : gameState->values.portalGrowthSpeedSlow) * gameState->values.portalGrowthFactorEvil;
+				}
+				if (cell.portalGrowTimer <= 0.0f) {
+					// @todo: Add randomization;
+					cell.portalGrowTimer = gameState->values.portalGrowTimer;
+					int32_t maxDist = 3;
+					int32_t currentDist = 1;
+					std::vector<Cell*> cells;
+					// @todo: slow down growth chance based on current distance (1 = 100%, 2 = 50%, 3 = 25%, etc.)
+					while (true) {
+						// Check if there is any cell at the current distance from the portal that's not fully grown
+						getCellsAtDistance(glm::ivec2(x, y), currentDist, cells);
+						// @todo: also take portals into account
+						bool skip = true;
+						for (auto dstCell : cells) {
+							if (dstCell && (dstCell->sporeType == SporeType::Empty || dstCell->sporeSize < SporeSize::Max)) {
+								skip = false;
 								break;
 							}
-							else {
-								if (dstCell->canGrow()) {
-									dstCell->grow();
-									break;
-								}
+						}
+						// Skip to next distance
+						if (skip) {
+							currentDist++;
+							if (currentDist > maxDist) {
+								break;
+							}
+							continue;
+						}
+						// Grow random cell
+						Cell* dstCell = cells[randomInt(static_cast<int32_t>(cells.size()))];
+						if (dstCell->sporeType == SporeType::Empty) {
+							dstCell->sporeType = (cell.sporeType == SporeType::Good_Portal) ? SporeType::Good : SporeType::Evil;
+							dstCell->sporeSize = SporeSize::Small;
+							break;
+						}
+						else {
+							if (dstCell->canGrow()) {
+								dstCell->grow();
+								break;
 							}
 						}
 					}
@@ -145,28 +140,6 @@ void PlayingField::update(float dT)
 			}
 		}
 	}
-	// Growth
-	/*
-	for (uint32_t x = 0; x < width; x++) {
-		for (uint32_t y = 0; y < height; y++) {
-			if (!deadZone(x, y)) {
-				Cell& cell = cells[x][y];
-				uint32_t neighbourCountGood = getNeighbourCount(x, y, SporeType::Good);
-				uint32_t neighbourCountEvil = getNeighbourCount(x, y, SporeType::Evil);
-				// @todo: distance to next portal for growth factor increase
-				// Empty cell grows for highest neighbour type count
-				if (cell.empty() && (neighbourCountGood >= 2 || neighbourCountEvil >= 2)) {
-					// Distance to next portal limits growth
-					// @todo: also check if actually connected to that portal? (nextPortal instead of just distance?)
-					float distanceToPortal = distanceToSporeType({ x, y }, (neighbourCountGood > neighbourCountEvil) ? SporeType::Good_Portal : SporeType::Evil_Portal);
-					if (distanceToPortal < gameState->values.maxGrowthDistanceToPortal) {
-						cell.sporeType = (neighbourCountGood > neighbourCountEvil) ? SporeType::Good : SporeType::Evil;
-					}
-				}
-			}
-		}
-	}
-	*/
 }
 
 uint32_t PlayingField::getNeighbourCount(uint32_t x, uint32_t y, SporeType sporeType)
@@ -228,13 +201,16 @@ Cell* PlayingField::cellAt(glm::ivec2 pos)
 	return nullptr;
 }
 
-void PlayingField::getCellsAtDistance(glm::ivec2 pos, uint32_t distance, std::vector<Cell*> &cells)
+void PlayingField::getCellsAtDistance(glm::ivec2 pos, uint32_t distance, std::vector<Cell*> &cells, bool skipDeadZone)
 {
 	cells.clear();
 	for (int32_t x = pos.x - distance; x <= pos.x + distance; x++) {
 		for (int32_t y = pos.y - distance; y <= pos.y + distance; y++) {
 			if ((x > -1) && (x < width) && (y > -1) && (y < height)) {
 				if (std::max(abs(x - pos.x), abs(y - pos.y)) == distance) {
+					if (skipDeadZone && deadZone(x, y)) {
+						continue;
+					}
 					Cell* cell = cellAt(glm::ivec2(x, y));
 					if (cell) {
 						cells.push_back(cell);

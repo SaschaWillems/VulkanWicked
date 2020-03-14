@@ -35,8 +35,12 @@ public:
 	float playerProjectileSpeed = 17.0f;
 	float playerProjectileGuardianDamage = 5.0f;
 	//
-	float portalGrowSpeed = 0.5f * 10.f;
+	float portalGrowthSpeedFast = 0.5f * 10.0f;
+	float portalGrowthSpeedSlow = 0.075f * 10.0f;
 	float portalGrowTimer = 1.0f;
+	// Can be changed to adjust difficulty
+	float portalGrowthFactorGood = 1.0f;
+	float portalGrowthFactorEvil = 1.0f;
 };
 
 class GameState
