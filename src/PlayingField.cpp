@@ -25,6 +25,7 @@ void PlayingField::generate(uint32_t width, uint32_t height)
 			Cell& cell = cells[x][y];
 			cell.sporeType = SporeType::Empty;
 			cell.sporeSize = 0.0f;
+			cell.pos = glm::ivec2(x, y);
 			cell.gridPos = glm::vec2(-(width * gridSize / 2.0f) + x * gridSize + gridSize / 2.0f, -(height * gridSize / 2.0f) + y * gridSize + gridSize / 2.0f);
 			cell.rndOffset = glm::vec2(rndFloat(rndEngine), rndFloat(rndEngine));
 			cell.rndOffset = glm::vec2(0.0f);
@@ -42,20 +43,6 @@ void PlayingField::update(float dT)
 	for (uint32_t x = 0; x < width; x++) {
 		for (uint32_t y = 0; y < height; y++) {
 			Cell& cell = cells[x][y];
-			// Reworked growth functionality based around portals (seems to be what the original is doing)
-
-			/*
-			// @todo: other Spore types, move to class
-			if (cell.sporeType == SporeType::Good) {
-				if (cell.sporeSize < gameState->values.maxSporeSize) {
-					cell.sporeSize += ((gameState->phase == Phase::Day) ? gameState->values.growthSpeedFast : gameState->values.growthSpeedSlow) * dT;
-				}
-			}
-			if (cell.sporeType == SporeType::Evil) {
-				if (cell.sporeSize < gameState->values.maxSporeSize) {
-					cell.sporeSize += ((gameState->phase == Phase::Night) ? gameState->values.growthSpeedFast : gameState->values.growthSpeedSlow) * dT;
-				}
-			}
 			if (cell.sporeType == SporeType::Evil_Dead) {
 				cell.floatValue -= dT * gameState->values.evilDeadSporeRessurectionSpeed;
 				if (cell.floatValue <= 0) {
@@ -72,11 +59,6 @@ void PlayingField::update(float dT)
 					}
 				}
 			}
-			if (cell.sporeType == SporeType::Good_Portal || cell.sporeType == SporeType::Evil_Portal) {
-				cell.sporeSize = 1.0f;
-			}
-			// @todo: Good growth over evil portals
-			*/
 		}
 	}
 
@@ -106,6 +88,10 @@ void PlayingField::update(float dT)
 					while (true) {
 						// Check if there is any cell at the current distance from the portal that's not fully grown
 						getCellsAtDistance(glm::ivec2(x, y), currentDist, cells);
+						if (cell.sporeType == SporeType::Evil_Portal) {
+							cells.erase(std::remove_if(cells.begin(), cells.end(), [](const Cell* c) { return c->sporeType == SporeType::Evil_Dead; }), cells.end());
+						}
+
 						// @todo: also take portals into account
 						bool skip = true;
 						for (auto dstCell : cells) {
@@ -132,6 +118,7 @@ void PlayingField::update(float dT)
 						if (dstCell->sporeType == SporeType::Empty) {
 							dstCell->sporeType = (cell.sporeType == SporeType::Good_Portal) ? SporeType::Good : SporeType::Evil;
 							dstCell->sporeSize = SporeSize::Small;
+							dstCell->zIndex = getMaxCellZIndex(dstCell->pos);
 							break;
 						}
 						else {
