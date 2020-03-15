@@ -27,7 +27,7 @@ void Game::spawnTrigger()
 				if ((cell.sporeType == SporeType::Good_Portal) && (gameState->projectileCountByType(ProjectileType::Good_Portal_Spawn) < gameState->values.maxNumGoodPortalSpawners)) {
 					if (randomFloat(1.0f) < gameState->values.evilPortalSpawnerSpawnChance) {
 						std::clog << "Spawned good portal spawner" << std::endl;
-						glm::vec3 pos = { cell.gridPos.x, 0.0f, cell.gridPos.y };
+						glm::vec3 pos = { cell.gridPos.x, cell.zIndex + 0.1f, cell.gridPos.y };
 						glm::vec3 dir = glm::vec3(0.0f);
 						// @todo: Only spawn if portal has a min. age?
 						gameState->addProjectile(Projectile(pos, dir, ProjectileType::Good_Portal_Spawn));
@@ -45,7 +45,7 @@ void Game::spawnTrigger()
 				if ((cell.sporeType == SporeType::Evil_Portal) && (gameState->projectileCountByType(ProjectileType::Evil_Portal_Spawn) < gameState->values.maxNumEvilPortalSpawners)) {
 					if (randomFloat(1.0f) < gameState->values.evilPortalSpawnerSpawnChance) {
 						std::clog << "Spawned evil portal spawner" << std::endl;
-						glm::vec3 pos = { cell.gridPos.x, 0.0f, cell.gridPos.y };
+						glm::vec3 pos = { cell.gridPos.x, -128.0f, cell.gridPos.y };
 						glm::vec3 dir = glm::vec3(0.0f);
 						dir.x = randomFloat(1.0f) < 0.5f ? -1.0f : 1.0f;
 						dir.z = randomFloat(1.0f) < 0.5f ? -1.0f : 1.0f;
@@ -60,9 +60,29 @@ void Game::spawnTrigger()
 
 void Game::update(float dT)
 {
-	updateProjectiles(dT);
-	updateSpawnTimer(dT);
-	updateState(dT);
+	// Fade between views
+	const float fadeSpeed = dT * 0.5f;
+	if (view != targetView) {
+		fade -= fadeSpeed;
+		if (fade <= 0.0f) {
+			view = targetView;
+			fade = 0.0f;
+		}
+	}
+	else {
+		if (fade < 1.0f) {
+			fade += fadeSpeed;
+			if (fade > 1.0f) {
+				fade = 1.0f;
+			}
+		}
+	}
+	if (view == View::InGame) {
+		updateProjectiles(dT);
+		updateSpawnTimer(dT);
+		updateState(dT);
+		updateTarotDeck(dT);
+	}
 }
 
 void Game::updateSpawnTimer(float dT)
@@ -142,6 +162,7 @@ void Game::updateProjectiles(float dT)
 				Cell* cell = playingField->cellFromVisualPos(projectile.pos);
 				if (cell && cell->sporeType == SporeType::Evil) {
 					cell->sporeType = SporeType::Evil_Dead;
+					cell->sporeSize = 1.0f;
 					cell->floatValue = gameState->values.evilDeadSporeLife;
 					projectile.remove();
 					continue;
@@ -247,5 +268,17 @@ void Game::spawnGuardian()
 		std::cerr << "No spawn point found for guardian, spawning at center" << std::endl;
 	}
 	guardian->spawn(spawnPosition);
+}
+
+void Game::setView(View view, bool fade)
+{
+	if (fade) {
+		fade = 1.0f;
+		this->targetView = view;
+	}
+	else {
+		this->targetView = view;
+		this->view = view;
+	}
 }
 

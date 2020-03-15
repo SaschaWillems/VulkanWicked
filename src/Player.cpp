@@ -16,7 +16,7 @@ LightSource Player::getLightSource()
 {
 	// @todo: Change with player state like HP and bonuses
 	LightSource lightSource;
-	lightSource.position = glm::vec4(position.x, 1.4f, position.z, 1.0f);
+	lightSource.position = glm::vec4(position.x, zIndex, position.z, 1.0f);
 	lightSource.color = glm::vec3(1.0f, 0.7f, 0.3f);
 	lightSource.radius = 3.0f;
 	return lightSource;
@@ -170,7 +170,7 @@ void Player::spawn(glm::vec2 spawnPosition)
 {
 	state = PlayerState::Default;
 	health = 100.0f;
-	position = glm::vec3(spawnPosition.x, 0.0f, spawnPosition.y);
+	position = glm::vec3(spawnPosition.x, -zIndex, spawnPosition.y);
 	velocity = glm::vec2(0.0f);
 	rotation = glm::vec2(0.0f);
 }

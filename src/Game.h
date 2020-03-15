@@ -21,6 +21,8 @@
 #include "Guardian.h"
 #include "UI/GameUI.h"
 
+enum class View { None, Intro, MainMenu, LevelSelection, InGame, GameOver };
+
 class Game: public GameInputListener, public RenderObject
 {
 private:
@@ -28,6 +30,9 @@ private:
 	void updateState(float dT);
 	void onKeyPress(SDL_Keycode keyCode);
 public:
+	View view = View::None;
+	View targetView = View::None;
+	float fade = 0.0f;
 	Player* player;
 	Guardian* guardian;
 	DescriptorSet* descriptorSetProjectiles;
@@ -41,5 +46,6 @@ public:
 	void updateGPUResources();
 	void spawnPlayer();
 	void spawnGuardian();
+	void setView(View view, bool fade = true);
 };
 

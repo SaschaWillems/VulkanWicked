@@ -32,8 +32,10 @@ public:
 	float sporeSize = 0.0f;
 	float floatValue = 0.0f;
 	float portalGrowTimer = 1.0f;
+	glm::ivec2 pos;
 	glm::vec2 gridPos;
 	glm::vec2 rndOffset;
+	float zIndex = 0.0f;
 	SporeType sporeType = SporeType::Empty;
 	bool empty();
 	bool hasLightSource();

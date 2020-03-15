@@ -26,6 +26,7 @@ private:
 	DescriptorSet* descriptorSet;
 	vkglTF::Model* model;
 public:
+	float zIndex = 255.0f;
 	glm::vec3 position;
 	glm::vec2 direction;
 	glm::vec2 rotation;

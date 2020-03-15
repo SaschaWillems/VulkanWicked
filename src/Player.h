@@ -32,6 +32,7 @@ private:
 	void fireProjectile();
 	void pickupObjects();
 public:
+	float zIndex = 256.0f;
 	Buffer ubo;
 	DescriptorSet* descriptorSet;
 	glm::vec3 position;

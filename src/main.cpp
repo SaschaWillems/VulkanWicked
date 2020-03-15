@@ -54,6 +54,7 @@ void init()
 
 	game = new Game();
 	game->setRenderer(renderer);
+	game->setView(View::InGame, false);
 	gameState = new GameState();
 	// Visual bounding box
 	// @todo: Different aspect ratios
@@ -85,9 +86,9 @@ void init()
 	std::srand((int)std::time(nullptr));
 
 	renderer->camera.type = Camera::CameraType::firstperson;
-	renderer->camera.position = { 0.f, 20.0f, 0.0f };
+	renderer->camera.position = { 0.0f, 20.0f, 0.0f };
 	renderer->camera.setRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
-	renderer->camera.setOrtho(boundingBox.left, boundingBox.right, boundingBox.top, boundingBox.bottom, -100.0f, 100.0f);
+	renderer->camera.setOrtho(boundingBox.left, boundingBox.right, boundingBox.top, boundingBox.bottom, -512.0f, 512.0f);
 
 	gameState->windowSize = glm::vec2(renderer->width, renderer->height);
 

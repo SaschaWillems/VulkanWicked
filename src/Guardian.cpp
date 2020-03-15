@@ -18,7 +18,7 @@ LightSource Guardian::getLightSource()
 {
     // @todo: Change with state like HP and bonuses
     LightSource lightSource;
-    lightSource.position = glm::vec4(position.x, 1.4f, position.z, 1.0f);
+    lightSource.position = glm::vec4(position.x, zIndex, position.z, 1.0f);
     lightSource.color = glm::vec3(0.5f, 0.0f, 0.0f);
     lightSource.radius = alive() ? 3.0f : 0.0f;
     return lightSource;
@@ -81,7 +81,7 @@ void Guardian::spawn(glm::vec2 spawnPosition)
 {
     state = GuardianState::Default;
     health = 100.0f;
-    position = glm::vec3(spawnPosition.x, 0.0f, spawnPosition.y);
+    position = glm::vec3(spawnPosition.x, -zIndex, spawnPosition.y);
     rotation = glm::vec2(0.0f);
     // @todo: Proper random direction
     direction.x = randomFloat(1.0f) < 0.5f ? -1.0f : 1.0f;
