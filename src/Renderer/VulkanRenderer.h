@@ -185,6 +185,8 @@ public:
 		LightSource lights[MAX_NUM_LIGHTS];
 		glm::vec4 viewPos;
 		int32_t numLights;
+		float fade = 0.5f;
+		float desaturate = 0.0f;
 	} lightSources;
 	Buffer lightsSSBO;
 

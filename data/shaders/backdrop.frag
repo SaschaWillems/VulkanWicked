@@ -53,4 +53,5 @@ void main()
 
 //	outAlbedo = texture(samplerColor, inUV);
 	outAlbedo = vec4(material.baseColorFactor.rgb, material.specularFactor.r);
+	outAlbedo.rgb = vec3(0.25);
 }

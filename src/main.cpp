@@ -195,7 +195,7 @@ void buildCommandBuffer()
 	cb->setViewport(0.0f, 0.0f, (float)renderer->width, (float)renderer->height, 0.0f, 1.0f);
 	cb->setScissor(0, 0, renderer->width, renderer->height);
 	cb->bindDescriptorSets(renderer->getPipelineLayout("deferred_composition"), { renderer->deferredComposition.descriptorSet }, 0);
-	cb->bindPipeline(renderer->getPipeline(game->paused ? "composition_paused" : "composition"));
+	cb->bindPipeline(renderer->getPipeline("composition"));
 	cb->draw(6, 1, 0, 0);
 	if (renderer->settings.debugoverlay) {
 		debugUI->draw(cb);
@@ -303,8 +303,15 @@ int SDL_main(int argc, char* argv[])
 		input->update();
 
 		if (!game->paused) {
+			// @todo: only when ingame
 			game->updateGPUResources();
 			updateLights();
+		}
+		else {
+			// @todo
+			renderer->lightSources.fade = game->fade * 0.5f;
+			renderer->lightSources.desaturate = game->paused ? 0.5f : 0.0f;
+			renderer->deferredComposition.lightsBuffer.copyTo(&renderer->lightSources, sizeof(renderer->lightSources));
 		}
 
 		renderer->submitFrame();
