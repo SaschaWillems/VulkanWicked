@@ -31,11 +31,17 @@ void PlayingField::generate(uint32_t width, uint32_t height)
 			cell.rndOffset = glm::vec2(0.0f);
 		}
 	}
+}
 
-	cells[width / 4][height / 2].sporeType = SporeType::Good_Portal;
-	cells[width / 4][height / 2].sporeSize = 1.0f;
-	cells[width - width / 4][height / 2].sporeType = SporeType::Evil_Portal;
-	cells[width - width / 4][height / 2].sporeSize = 1.0f;
+void PlayingField::clear()
+{
+	for (uint32_t x = 0; x < width; x++) {
+		for (uint32_t y = 0; y < height; y++) {
+			Cell& cell = cells[x][y];
+			cell.sporeType = SporeType::Empty;
+			cell.sporeSize = 0.0f;
+		}
+	}
 }
 
 void PlayingField::update(float dT)

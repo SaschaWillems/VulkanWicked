@@ -47,5 +47,6 @@ public:
 	void spawnPlayer();
 	void spawnGuardian();
 	void setView(View view, bool fade = true);
+	void loadLevel(const std::string& filename);
 };
 

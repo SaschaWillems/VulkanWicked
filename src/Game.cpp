@@ -282,3 +282,34 @@ void Game::setView(View view, bool fade)
 	}
 }
 
+void Game::loadLevel(const std::string& filename)
+{
+	std::clog << "Loading level from \"" << filename << "\"" << std::endl;
+	std::ifstream is(assetManager->assetPath + "/levels/" + filename);
+	if (!is.is_open())
+	{
+		std::cerr << "Error: Could not open level definition file \"" << filename << "\"" << std::endl;
+		return;
+	}
+	nlohmann::json json;
+	is >> json;
+	is.close();
+	if (json.count("portals") > 0) {
+		playingField->clear();
+		if (json["portals"].count("good") > 0) {
+			for (auto& portal : json["portals"]["good"]) {
+				Cell* cell = &playingField->cells[portal["x"]][portal["y"]];
+				cell->sporeType = SporeType::Good_Portal;
+				cell->sporeSize = 1.0f;
+			}
+		}
+		if (json["portals"].count("evil") > 0) {
+			for (auto& portal : json["portals"]["evil"]) {
+				Cell* cell = &playingField->cells[portal["x"]][portal["y"]];
+				cell->sporeType = SporeType::Evil_Portal;
+				cell->sporeSize = 1.0f;
+			}
+		}
+	}
+}
+

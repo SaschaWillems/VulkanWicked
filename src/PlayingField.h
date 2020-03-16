@@ -31,6 +31,7 @@ public:
 	uint32_t height;
 	std::vector<std::vector<Cell>> cells;
 	void generate(uint32_t width, uint32_t height);
+	void clear();
 	void update(float dT);
 	uint32_t getNeighbourCount(uint32_t x, uint32_t y, SporeType sporeType);
 	bool deadZone(uint32_t x, uint32_t y);
