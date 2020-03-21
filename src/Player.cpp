@@ -103,7 +103,7 @@ void Player::updateGPUResources() {
 void Player::update(float dT) {
 
 	if (firingCooldown > 0.0f) {
-		firingCooldown -= 0.1f;
+		firingCooldown -= 5.0f * dT;
 	}
 
 	glm::vec2 dir = glm::vec2(0.0f);
@@ -122,12 +122,12 @@ void Player::update(float dT) {
 
 	if (glm::length(dir) != 0.0f) {
 		glm::vec2 n = glm::normalize(dir);
-		velocity += n * accelFactor * 0.05f;
+		velocity += n * accelFactor * dT;
 	}
 
 	if (glm::length(velocity) != 0.0f) {
-		position.x += velocity.x;
-		position.z += velocity.y;
+		position.x += velocity.x * dT;
+		position.z += velocity.y * dT;
 		updateGPUResources();
 	}
 
@@ -144,16 +144,18 @@ void Player::update(float dT) {
 		position.z = gameState->boundingBox.bottom;
 	}
 
-	velocity.x = velocity.x - velocity.x * dragFactor;
-	velocity.y = velocity.y - velocity.y * dragFactor;
+	velocity.x = velocity.x - velocity.x * (dragFactor * dT);
+	velocity.y = velocity.y - velocity.y * (dragFactor * dT);
 
-	rotation.y -= velocity.x * dT * 10.0f;
+	/*
+	rotation.y -= velocity.x * 0.5f;
 	if (rotation.y > 2.0f * M_PI) {
 		rotation.y = rotation.y - (2.0f * M_PI);
 	}
 	if (rotation.y < -2.0f * M_PI) {
 		rotation.y = rotation.y + (2.0f * M_PI);
 	}
+	*/
 }
 
 void Player::draw(CommandBuffer* cb)

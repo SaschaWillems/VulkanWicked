@@ -40,6 +40,7 @@ public:
 	PlayerState state = PlayerState::Default;
 	const float accelFactor = 0.2f;
 	const float dragFactor = 0.02f;
+	const float accelFactor = 17.5f;
 	glm::vec2 velocity;
 	glm::vec2 rotation;
 	struct {
