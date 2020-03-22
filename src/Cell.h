@@ -15,7 +15,8 @@ enum class SporeType {
 	Good_Portal,
 	Evil,
 	Evil_Portal,
-	Evil_Dead
+	Evil_Dead,
+	Deadzone
 };
 
 class SporeSize {
@@ -29,6 +30,11 @@ public:
 class Cell
 {
 public:
+	// Spores are "owned" by the portal they're spawned from
+	// This is required for growth calculations
+	Cell* owner = nullptr;
+	// Store neighbours for performance
+	Cell* neighbours[8];
 	float sporeSize = 0.0f;
 	float floatValue = 0.0f;
 	float portalGrowTimer = 1.0f;
@@ -42,5 +48,6 @@ public:
 	LightSource getLightSource();
 	void grow();
 	bool canGrow();
+	uint32_t getNeighbourCount(SporeType sporeType, Cell* owner);
 };
 

@@ -23,6 +23,9 @@ private:
 		glm::vec3 pos;
 		float scale;
 	};
+	void updatePortal(Cell* portal, float dT);
+	void updateSpore(Cell& cell, float dT);
+	void getCellsAtDistance(glm::ivec2 pos, uint32_t distance, Cell* cells[], uint32_t& count);
 public:
 	// @todo: make private after restructuring
 	Buffer instanceBuffer;
@@ -33,12 +36,10 @@ public:
 	void generate(uint32_t width, uint32_t height);
 	void clear();
 	void update(float dT);
-	uint32_t getNeighbourCount(uint32_t x, uint32_t y, SporeType sporeType);
 	bool deadZone(uint32_t x, uint32_t y);
 	float distanceToSporeType(glm::vec2 pos, SporeType sporeType);
 	Cell* cellFromVisualPos(glm::vec3 pos);
 	Cell* cellAt(glm::ivec2 pos);
-	void getCellsAtDistance(glm::ivec2 pos, uint32_t distance, std::vector<Cell*> &cells, bool skipDeadZone = true);
 	float getMaxCellZIndex(glm::ivec2 pos);
 	void prepareGPUResources();
 	void updateGPUResources();

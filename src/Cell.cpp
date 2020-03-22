@@ -23,18 +23,17 @@ bool Cell::hasLightSource()
 LightSource Cell::getLightSource()
 {
 	LightSource lightSource;
-	lightSource.position = glm::vec4(gridPos.x + rndOffset.x, 1.5f, gridPos.y + rndOffset.y, 0.0f);
-	lightSource.radius = 8.0f;
+	lightSource.position = glm::vec4(gridPos.x + rndOffset.x, -zIndex-0.1f, gridPos.y + rndOffset.y, 0.0f);
+	lightSource.radius = 2.0f;
 	switch(sporeType) {
 	case SporeType::Good_Portal:
-		//lightSource.position.y = 2.5f;hittest
-		lightSource.color = glm::vec3(1.0f, 0.7f, 0.3f);
-		//lightSource.color = glm::vec3(0.0f, 1.0f, 0.3f);
+//		lightSource.color = glm::vec3(1.0f, 0.7f, 0.3f);
+		lightSource.color = glm::vec3(0.25f);
+		lightSource.radius = 4.0f;
 		break;
 	case SporeType::Evil_Portal:
-		//lightSource.position.y = 2.5f;
-		lightSource.color = glm::vec3(0.0f, 0.0f, 1.0f);
-		//lightSource.color = glm::vec3(1.0f, 0.0f, 0.0f);
+		//lightSource.color = glm::vec3(0.0f, 0.0f, 1.0f);
+		lightSource.color = glm::vec3(1.0f, 0.0f, 0.0f);
 		break;
 	}
 	return lightSource;
@@ -59,5 +58,16 @@ void Cell::grow()
 bool Cell::canGrow()
 {
 	return (sporeSize < SporeSize::Max);
+}
+
+uint32_t Cell::getNeighbourCount(SporeType sporeType, Cell* owner)
+{
+	uint32_t count = 0;
+	for (Cell* neighbour : neighbours) {
+		if ((neighbour) && (neighbour->sporeType == sporeType) && (neighbour->owner = owner)) {
+			count++;
+		}
+	}
+	return count;
 }
 
