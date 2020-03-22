@@ -174,7 +174,7 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 			dstCell->owner = portal;
 			dstCell->sporeType = sporeType;
 			dstCell->sporeSize = SporeSize::Small;
-			dstCell->zIndex = getMaxCellZIndex(dstCell->pos);
+			dstCell->zIndex = dstCell->getNewZIndexFromNeighbours();
 			break;
 		}
 		else if (dstCell->sporeType == otherPortalType) {
@@ -192,7 +192,7 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 			if (dstCell->canGrow()) {
 				dstCell->grow();
 				// Bring forward
-				dstCell->zIndex = getMaxCellZIndex(dstCell->pos);
+				dstCell->zIndex = dstCell->getNewZIndexFromNeighbours();
 				break;
 			}
 		}
@@ -279,20 +279,6 @@ void PlayingField::getCellsAtDistance(glm::ivec2 pos, uint32_t distance, Cell* c
 			}
 		}
 	}
-}
-
-float PlayingField::getMaxCellZIndex(glm::ivec2 pos)
-{
-	float maxZ = cellAt(pos)->zIndex;
-	for (int32_t x = pos.x - 1; x <= pos.x + 1; x++) {
-		for (int32_t y = pos.y - 1; y <= pos.y + 1; y++) {
-			Cell* cell = cellAt(glm::ivec2(x, y));
-			if (cell && cell->zIndex > maxZ) {
-				maxZ = cell->zIndex;
-			}
-		}
-	}
-	return std::min(maxZ + 0.1f, 256.0f);
 }
 
 void PlayingField::prepareGPUResources()

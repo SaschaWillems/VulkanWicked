@@ -40,7 +40,6 @@ public:
 	float distanceToSporeType(glm::vec2 pos, SporeType sporeType);
 	Cell* cellFromVisualPos(glm::vec3 pos);
 	Cell* cellAt(glm::ivec2 pos);
-	float getMaxCellZIndex(glm::ivec2 pos);
 	void prepareGPUResources();
 	void updateGPUResources();
 	void draw(CommandBuffer* cb);

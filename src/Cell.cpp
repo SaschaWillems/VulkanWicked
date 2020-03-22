@@ -71,3 +71,14 @@ uint32_t Cell::getNeighbourCount(SporeType sporeType, Cell* owner)
 	return count;
 }
 
+float Cell::getNewZIndexFromNeighbours()
+{
+	float maxZ = zIndex;
+	for (Cell* neighbour : neighbours) {
+		if ((neighbour) && (neighbour->zIndex > maxZ)) {
+			maxZ = neighbour->zIndex;
+		}
+	}
+	return std::min(maxZ + 0.1f, 256.0f);
+}
+

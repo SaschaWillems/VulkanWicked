@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include "Renderer/LightSource.h"
 
@@ -49,5 +50,6 @@ public:
 	void grow();
 	bool canGrow();
 	uint32_t getNeighbourCount(SporeType sporeType, Cell* owner);
+	float getNewZIndexFromNeighbours();
 };
 
