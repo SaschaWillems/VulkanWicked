@@ -252,6 +252,17 @@ void DebugUI::updateGPUResources()
 	indexBuffer.flush();
 }
 
+void DebugUI::onMouseButtonClick(uint32_t button)
+{
+	if (button == SDL_BUTTON_MIDDLE) {
+		glm::vec2 pos = (glm::vec2(mousePos) / gameState->windowSize) - glm::vec2(0.5f);
+		pos.x = pos.x * (float)playingField->width;
+		pos.y = pos.y * (float)playingField->height;
+		glm::ivec2 cpos = glm::vec2(round(pos.x) + floor(playingField->width / 2), round(pos.y) + floor(playingField->height / 2));
+		selectedCell = playingField->cellAt(cpos);
+	}
+}
+
 void DebugUI::draw(CommandBuffer* cb)
 {
 	ImDrawData* imDrawData = ImGui::GetDrawData();
@@ -297,6 +308,54 @@ bool ColoredButton(const char* label, ImVec4 color)
 	return res;
 }
 
+const char* cellSporeTypeAsString(SporeType sporeType) {
+	switch (sporeType) {
+	case SporeType::Empty:
+		return "Empty";
+	case SporeType::Good:
+		return "Good";
+	case SporeType::Good_Portal:
+		return "Good Portal";
+	case SporeType::Evil:
+		return "Evil";
+	case SporeType::Evil_Portal:
+		return "Evil Portal";
+	case SporeType::Evil_Dead:
+		return "Evil Dead";
+	case SporeType::Deadzone:
+		return "Deadzone";
+	default:
+		return "";
+	}
+}
+
+void cellInfo(Cell* cell, bool showOwner, bool showNeighbours)
+{
+	if (!cell) {
+		return;
+	}
+	ImGui::Text("Pos: %d / %d", cell->pos.x, cell->pos.y);
+	ImGui::Text("GridPos.: %f / %f", cell->gridPos.x, cell->gridPos.y);
+	ImGui::Text("ZIndex: %f", cell->zIndex);
+	ImGui::Text("Type: %s", cellSporeTypeAsString(cell->sporeType));
+	if (showOwner) {
+		if (cell && cell->owner) {
+			if (ImGui::CollapsingHeader("Owner", ImGuiTreeNodeFlags_DefaultOpen)) {
+				cellInfo(cell->owner, false, false);
+			}
+		}
+	}
+	if (showNeighbours) {
+		if (ImGui::CollapsingHeader("Neighbours", ImGuiTreeNodeFlags_DefaultOpen)) {
+			for (auto neighbour : cell->neighbours) {
+				if (neighbour) {
+					ImGui::Text("%+d / %+d - %s", neighbour->pos.x - cell->pos.x, neighbour->pos.y - cell->pos.y, cellSporeTypeAsString(neighbour->sporeType));
+				}
+			}
+		}
+	}
+}
+
 void DebugUI::render()
 {
 	ImVec2 btnSize = ImVec2(100.0f, 25.0f);
@@ -323,6 +382,14 @@ void DebugUI::render()
 	}
 	ImGui::Text("projectiles (alive): %d (%d)", gameState->projectiles.size(), pcount);
 	ImGui::End();
+
+	if (selectedCell) {
+		ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+		ImGui::Begin("Cell", nullptr, ImGuiWindowFlags_None);
+		cellInfo(selectedCell, true, true);
+		ImGui::End();
+	}
 
 	ImGui::SetNextWindowPos(ImVec2(25, 25), ImGuiSetCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);

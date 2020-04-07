@@ -49,7 +49,9 @@ private:
 		glm::vec2 scale;
 		glm::vec2 translate;
 	} pushConstBlock;
+	Cell* selectedCell = nullptr;
 	void updateGPUResources();
+	void onMouseButtonClick(uint32_t button);
 public:
 	Player* player;
 	Guardian* guardian;
