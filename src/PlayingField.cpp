@@ -41,7 +41,7 @@ void PlayingField::generate(uint32_t width, uint32_t height)
 			}
 			// Get direct neighbours (no diagonal!)
 			uint32_t neighbourIndex = 0;
-			const glm::ivec2 offsets[4] = { {0, -1}, {0, 1}, {-1,  0}, {1,  1} };
+			const glm::ivec2 offsets[4] = { {0, -1}, {0, 1}, {-1,  0}, {1, 0} };
 			for (auto offset : offsets) {
 				glm::ivec2 dst = glm::vec2(x + offset.x, y + offset.y);
 				cell.neighbours[neighbourIndex] = cellAt(dst);
