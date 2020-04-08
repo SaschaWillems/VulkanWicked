@@ -87,16 +87,19 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 	// @todo: Portal growth at playing field border not properly working
 	// Portal growth timer speed depends on day/night cycle
 	SporeType sporeType;
+	SporeType otherSporeType;
 	SporeType otherPortalType;
 	switch (portal->sporeType) {
 	case SporeType::Good_Portal:
 		portal->portalGrowTimer -= dT * ((gameState->phase == Phase::Day) ? gameState->values.portalGrowthSpeedFast : gameState->values.portalGrowthSpeedSlow) * gameState->values.portalGrowthFactorGood;
 		sporeType = SporeType::Good;
+		otherSporeType = SporeType::Evil_Dead;
 		otherPortalType = SporeType::Evil_Portal;
 		break;
 	case SporeType::Evil_Portal:
 		portal->portalGrowTimer -= dT * ((gameState->phase == Phase::Night) ? gameState->values.portalGrowthSpeedFast : gameState->values.portalGrowthSpeedSlow) * gameState->values.portalGrowthFactorEvil;
 		sporeType = SporeType::Evil;
+		otherSporeType = SporeType::Good;
 		otherPortalType = SporeType::Good_Portal;
 		break;
 	}
@@ -106,24 +109,34 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 	// Growth calculations
 	// @todo: Add randomization;
 	portal->portalGrowTimer = gameState->values.portalGrowTimer;
+	
 	const int32_t maxDist = 4;
+	const float growChances[maxDist] = {
+		95.0, 55.0, 35.0, 5.0
+	};
+	const float overGrowChances[maxDist] = {
+		70.0, 30.0, 12.5, 2.5
+	};
+
 	int32_t currentDist = 1;
-	//std::vector<Cell*> cells;
 	Cell* cells[(maxDist*2) * (maxDist*2)];
+	Cell* enemyCells[(maxDist * 2) * (maxDist * 2)];
 	uint32_t cellCount;
-	// @todo: slow down growth chance based on current distance (1 = 100%, 2 = 50%, 3 = 25%, etc.)
+
 	while (true) {
-		// Check if there is any cell at the current distance from the portal that's not fully grown
+		// Fetch valid cells at current distance
 		cellCount = 0;
 		for (int32_t x = portal->pos.x - currentDist; x <= portal->pos.x + currentDist; x++) {
 			for (int32_t y = portal->pos.y - currentDist; y <= portal->pos.y + currentDist; y++) {
 				if ((x > -1) && (x < width) && (y > -1) && (y < height)) {
 					if (std::max(abs(x - portal->pos.x), abs(y - portal->pos.y)) == currentDist) {
 						Cell* cell = &this->cells[x][y];
+						// Skip deadzone around playing field center
 						if (cell->sporeType == SporeType::Deadzone) {
 							continue;
 						}
-						if (cell->sporeSize >= SporeSize::Max) {
+						// Skip fully grown spores
+						if (cell->sporeType == sporeType && cell->sporeSize >= SporeSize::Max) {
 							continue;
 						}
 						// Skip temporary disabled/dead evil cells for evil portals
@@ -147,14 +160,25 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 
 		// @todo: also take portals into account
 		bool skip = true;
+
+		// Check if we need to skip to the next distance
 		for (uint32_t i = 0; i < cellCount; i++) {
-			//if (dstCell && ((dstCell->sporeType == SporeType::Empty || dstCell->sporeSize < SporeSize::Max)) || (dstCell->sporeType == otherPortalType)) {
-			if (cells[i] && ((cells[i]->sporeType == SporeType::Empty || cells[i]->sporeSize < SporeSize::Max))) {
+			// At least one empty spore
+			if (cells[i] && (cells[i]->sporeType == SporeType::Empty)) {
+				skip = false;
+				break;
+			}
+			// At least one own spore that can be grown
+			if (cells[i] && ((cells[i]->sporeType == sporeType && cells[i]->sporeSize < SporeSize::Max))) {
+			}
+			// At least one enemy spore
+			if (cells[i] && (cells[i]->sporeType == otherSporeType)) {
 				skip = false;
 				break;
 			}
 		}
-		// Skip to next distance
+		
+		// Skip to next distance if there are no valid target cells
 		if (skip) {
 			currentDist++;
 			if (currentDist > maxDist) {
@@ -162,19 +186,17 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 			}
 			continue;
 		}
+
 		// Grow random cell
-		// Growth chance decreases with distance
-		float growthChance = std::max(100.0f - ((currentDist - 1) * 50.0f), 1.0f);
-		if (randomFloat(100.0f) > growthChance) {
-			continue;
-		}
 		Cell* dstCell = cells[randomInt(cellCount)];
 		if (dstCell->sporeType == SporeType::Empty) {
-			// @todo: remove owner on takeover!
-			dstCell->owner = portal;
-			dstCell->sporeType = sporeType;
-			dstCell->sporeSize = SporeSize::Small;
-			dstCell->zIndex = dstCell->getNewZIndexFromNeighbours();
+			// Grow new spore
+			if (randomFloat(100.0f) < growChances[currentDist]) {
+				dstCell->owner = portal;
+				dstCell->sporeType = sporeType;
+				dstCell->sporeSize = SporeSize::Small;
+				dstCell->zIndex = dstCell->getNewZIndexFromNeighbours();
+			}
 			break;
 		}
 		else if (dstCell->sporeType == otherPortalType) {
@@ -188,6 +210,18 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 			*/
 			break;
 		}
+		else if (dstCell->sporeType == otherSporeType) {
+			// Overgrow enemy spore
+			if (randomFloat(100.0f) < overGrowChances[currentDist]) {
+				dstCell->sporeType = sporeType;
+				if (dstCell->canGrow()) {
+					dstCell->grow();
+					// Bring forward
+					dstCell->zIndex = dstCell->getNewZIndexFromNeighbours();
+				}
+			}
+			break;
+		}
 		else {
 			if (dstCell->canGrow()) {
 				dstCell->grow();
@@ -196,8 +230,7 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 				break;
 			}
 		}
-	}
-
+	}	
 }
 
 void PlayingField::update(float dT)
