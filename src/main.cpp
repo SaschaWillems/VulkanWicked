@@ -82,6 +82,7 @@ void init()
 
 	game->player = player;
 	game->guardian = guardian;
+	game->tarotDeck = tarotDeck;
 
 	std::srand((int)std::time(nullptr));
 
@@ -249,7 +250,9 @@ int SDL_main(int argc, char* argv[])
 	assetManager->addModelsFolder("scenes");
 	assetManager->addTexturesFolder("textures");
 
+	tarotDeck->setState(TarotDeckState::Hidden);
 	guardian->setModel("guardian_black_sun");
+	tarotDeck->setModel("tarot_card");
 
 	game->prepareGPUResources();
 	debugUI->prepareGPUResources(renderer->pipelineCache, renderer->getRenderPass("deferred_composition"));

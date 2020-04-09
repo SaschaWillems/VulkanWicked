@@ -108,6 +108,12 @@ void Game::updateState(float dT)
 	}
 }
 
+void Game::updateTarotDeck(float dT)
+{
+	// @todo: Spawn and despawn
+	tarotDeck->update(dT, player->position);
+}
+
 void Game::onKeyPress(SDL_Keycode keyCode)
 {
 	switch(keyCode) 
