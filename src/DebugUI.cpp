@@ -515,6 +515,29 @@ void DebugUI::render()
 			file.close();
 		}
 	}
+
+	if (ImGui::CollapsingHeader("Level", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (ImGui::BeginCombo("##levelfile", selectedLevelName.c_str())) {
+			for (auto level : game->levels) {
+				bool isSelected = (selectedLevelName == level.second);
+				if (ImGui::Selectable(level.first.c_str(), isSelected)) {
+					selectedLevelName = level.first;
+					selectedLevelFile = level.second;
+				}
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Load##level", btnSize)) {
+			game->loadLevel(selectedLevelFile);
+		}
+	}
+
+
 	ImGui::End();
 
 	ImGui::SetNextWindowPos(ImVec2(70, 70), ImGuiSetCond_FirstUseEver);
@@ -553,7 +576,6 @@ void DebugUI::render()
 		}
 	}
 	ImGui::End();
-
 
 	ImGui::EndFrame();
 	ImGui::Render();

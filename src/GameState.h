@@ -19,7 +19,7 @@ public:
 	float playingFieldDeadzone = 4.5f;
 	float maxSporeSize = 0.75f;
 	float maxGrowthDistanceToPortal = 5.0f;
-	float maxNumGoodPortalSpawners = 3;
+	float maxNumGoodPortalSpawners = 2;
 	float maxNumEvilPortalSpawners = 3;
 	float growthSpeedFast = 0.25f;
 	float growthSpeedSlow = 0.125f;
@@ -56,6 +56,7 @@ public:
 	GameState();
 	void addProjectile(Projectile projectile);
 	uint32_t projectileCountByType(ProjectileType type);
+	void clear();
 };
 
 extern GameState* gameState;

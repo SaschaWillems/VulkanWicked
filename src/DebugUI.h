@@ -69,6 +69,8 @@ private:
 		glm::vec2 translate;
 	} pushConstBlock;
 	Cell* selectedCell = nullptr;
+	std::string selectedLevelName = "";
+	std::string selectedLevelFile = "";
 	void updateGPUResources();
 	void onMouseButtonClick(uint32_t button);
 public:

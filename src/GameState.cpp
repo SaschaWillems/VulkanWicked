@@ -49,3 +49,8 @@ uint32_t GameState::projectileCountByType(ProjectileType type)
 	}
 	return count;
 }
+
+void GameState::clear()
+{
+	projectiles.clear();
+}

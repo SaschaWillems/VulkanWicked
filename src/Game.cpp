@@ -282,10 +282,21 @@ void Game::setView(View view, bool fade)
 	}
 }
 
+void Game::addLevelFolder(const std::string& folder)
+{
+	for (const auto& file : std::filesystem::directory_iterator(assetManager->assetPath + folder)) {
+		if (file.path().extension().string() == ".json") {
+			std::string filename = file.path().string();
+			std::replace(filename.begin(), filename.end(), '\\', '/');
+			levels[file.path().stem().string()] = filename;
+		}
+	}
+}
+
 void Game::loadLevel(const std::string& filename)
 {
 	std::clog << "Loading level from \"" << filename << "\"" << std::endl;
-	std::ifstream is(assetManager->assetPath + "/levels/" + filename);
+	std::ifstream is(filename);
 	if (!is.is_open())
 	{
 		std::cerr << "Error: Could not open level definition file \"" << filename << "\"" << std::endl;
@@ -294,20 +305,46 @@ void Game::loadLevel(const std::string& filename)
 	nlohmann::json json;
 	is >> json;
 	is.close();
+	playingField->clear();
+	gameState->clear();
 	if (json.count("portals") > 0) {
-		playingField->clear();
 		if (json["portals"].count("good") > 0) {
-			for (auto& portal : json["portals"]["good"]) {
-				Cell* cell = &playingField->cells[portal["x"]][portal["y"]];
+			for (auto& pos : json["portals"]["good"]) {
+				Cell* cell = &playingField->cells[pos["x"]][pos["y"]];
 				cell->sporeType = SporeType::Good_Portal;
 				cell->sporeSize = 1.0f;
 			}
 		}
 		if (json["portals"].count("evil") > 0) {
-			for (auto& portal : json["portals"]["evil"]) {
-				Cell* cell = &playingField->cells[portal["x"]][portal["y"]];
+			for (auto& pos : json["portals"]["evil"]) {
+				Cell* cell = &playingField->cells[pos["x"]][pos["y"]];
 				cell->sporeType = SporeType::Evil_Portal;
 				cell->sporeSize = 1.0f;
+			}
+		}
+	}
+	if (json.count("spores") > 0) {
+		if (json["spores"].count("good") > 0) {
+			for (auto& pos : json["spores"]["good"]) {
+				Cell* cell = &playingField->cells[pos["x"]][pos["y"]];
+				cell->sporeType = SporeType::Good;
+				cell->sporeSize = SporeSize::Max;
+			}
+		}
+		if (json["spores"].count("evil") > 0) {
+			for (auto& pos : json["spores"]["evil"]) {
+				Cell* cell = &playingField->cells[pos["x"]][pos["y"]];
+				cell->sporeType = SporeType::Evil;
+				cell->sporeSize = SporeSize::Max;
+			}
+		}
+		if (json["spores"].count("evil_dead") > 0) {
+			for (auto& pos : json["spores"]["evil_dead"]) {
+				Cell* cell = &playingField->cells[pos["x"]][pos["y"]];
+				cell->sporeType = SporeType::Evil_Dead;
+				cell->sporeSize = SporeSize::Max;
+				// @todo: as this is usually for testing, dead cells should stay dead for a long time
+				cell->floatValue = FLT_MAX;
 			}
 		}
 	}
