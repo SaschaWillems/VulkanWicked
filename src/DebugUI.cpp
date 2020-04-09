@@ -341,9 +341,12 @@ void cellInfo(Cell* cell, bool showOwner, bool showNeighbours)
 		return;
 	}
 	ImGui::Text("Pos: %d / %d", cell->pos.x, cell->pos.y);
-	ImGui::Text("GridPos.: %f / %f", cell->gridPos.x, cell->gridPos.y);
-	ImGui::Text("ZIndex: %f", cell->zIndex);
+	ImGui::Text("GridPos.: %.2f / %.2f", cell->gridPos.x, cell->gridPos.y);
+	ImGui::Text("ZIndex: %.2f", cell->zIndex);
 	ImGui::Text("Type: %s", cellSporeTypeAsString(cell->sporeType));
+	if (cell->sporeType == SporeType::Good_Portal || cell->sporeType == SporeType::Evil_Portal) {
+		ImGui::Text("Portal Grow Timer: %.2f", cell->portalGrowTimer);
+	}
 	if (showOwner) {
 		if (cell && cell->owner) {
 			if (ImGui::CollapsingHeader("Owner", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -370,7 +373,7 @@ void DebugUI::render()
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2(gameState->windowSize.x, gameState->windowSize.y);
-	io.MousePos = ImVec2(input->mouse.position.x, input->mouse.position.y);
+	io.MousePos = ImVec2((float)input->mouse.position.x, (float)input->mouse.position.y);
 	io.MouseDown[0] = input->mouse.buttons.left;
 	io.MouseDown[1] = input->mouse.buttons.right;
 
@@ -428,11 +431,23 @@ void DebugUI::render()
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("Tarot deck", nullptr, ImGuiWindowFlags_None);
 	ImGui::Text("State: %d (timer = %f)", (int32_t)tarotDeck->state, tarotDeck->stateTimer);
-	if (ImGui::Button("Appear", btnSize)) {
+	ImGui::Text("Activation: %f", tarotDeck->activationTimer);
+	if (ImGui::Button("Appearing", btnSize)) {
 		tarotDeck->setState(TarotDeckState::Appearing);
 	}
-	if (ImGui::Button("Disappear", btnSize)) {
+	ImGui::SameLine();
+	if (ImGui::Button("Visible", btnSize)) {
+		tarotDeck->setState(TarotDeckState::Visible);
+	}
+	if (ImGui::Button("Activated", btnSize)) {
+		tarotDeck->setState(TarotDeckState::Activated);
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Disappearing", btnSize)) {
 		tarotDeck->setState(TarotDeckState::Disappearing);
+	}
+	if (ImGui::Button("Hidden", btnSize)) {
+		tarotDeck->setState(TarotDeckState::Hidden);
 	}
 	ImGui::End();
 
@@ -515,6 +530,25 @@ void DebugUI::render()
 			file.close();
 		}
 	}
+
+	if (ImGui::CollapsingHeader("Game view", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (ImGui::Button("Main menu", btnSize)) {
+			game->setView(View::MainMenu);
+		}
+		if (ImGui::Button("Level sel.", btnSize)) {
+			game->setView(View::LevelSelection);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("In game", btnSize)) {
+			game->setView(View::InGame);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Game over", btnSize)) {
+			game->setView(View::GameOver);
+		}
+	}
+
 
 	if (ImGui::CollapsingHeader("Level", ImGuiTreeNodeFlags_DefaultOpen))
 	{
