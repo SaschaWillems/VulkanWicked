@@ -265,8 +265,13 @@ int SDL_main(int argc, char* argv[])
 	tarotDeck->updateGPUResources();
 	gameUI->updateGPUResources();
 
+
+	tStart = std::chrono::high_resolution_clock::now();
+	std::chrono::time_point<std::chrono::high_resolution_clock> lastTimestamp;
+	uint32_t frameCounter = 0;
 	bool minimized = false;
 	bool quit = false;
+	lastTimestamp = std::chrono::high_resolution_clock::now();
 	while (!quit) {
 		tDelta = std::chrono::duration<float, std::milli>(std::chrono::high_resolution_clock::now() - tStart);
 		tStart = std::chrono::high_resolution_clock::now();
@@ -326,6 +331,15 @@ int SDL_main(int argc, char* argv[])
 			tarotDeck->update(timeStep);
 		}
 		gameUI->updateGPUResources();
+		frameCounter++;
+
+		float fpsTimer = (float)(std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - lastTimestamp).count());
+		if (fpsTimer >= 1000.0f)
+		{
+			debugUI->timing.fps.update(static_cast<float>((float)frameCounter* (1000.0f / fpsTimer)));
+			frameCounter = 0;
+			lastTimestamp = std::chrono::high_resolution_clock::now();
+		}
 	}
 
 	delete playingField;

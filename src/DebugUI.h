@@ -8,6 +8,8 @@
 
 #include <fstream>
 #include "imgui.h"
+
+#include "Game.h"
 #include "GameState.h"
 #include "GameInput.h"
 #include "Player.h"
@@ -29,7 +31,24 @@
 #include "Renderer/Sampler.h"
 #include "vk_mem_alloc.h"
 
-class DebugUI: public RenderObject
+class PerformanceValue {
+public:
+	float min = FLT_MAX;
+	float max = FLT_MIN;
+	float current;
+	std::string format = "%.3f";
+	void update(float val) {
+		current = val;
+		if (val < min) {
+			min = val;
+		}
+		if (val > max) {
+			max = val;
+		}
+	}
+};
+
+class DebugUI: public RenderObject, public GameInputListener
 {
 private:
 	bool visible = true;
@@ -53,6 +72,12 @@ private:
 	void updateGPUResources();
 	void onMouseButtonClick(uint32_t button);
 public:
+	struct Timing {
+		PerformanceValue commandbufferbuild;
+		PerformanceValue playfieldupdate;
+		PerformanceValue fps;
+	} timing;
+	Game* game;
 	Player* player;
 	Guardian* guardian;
 	TarotDeck* tarotDeck;

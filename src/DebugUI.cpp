@@ -13,6 +13,7 @@ DebugUI::DebugUI()
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.FontGlobalScale = 1.0f;
+	timing.fps.format = "%.1f";
 }
 
 DebugUI::~DebugUI()
@@ -308,6 +309,11 @@ bool ColoredButton(const char* label, ImVec4 color)
 	return res;
 }
 
+void DisplayPerformanceValue(const std::string &caption, PerformanceValue &value) 
+{
+	ImGui::Text(std::string(caption + ": " + value.format + " (" + value.format + "/" + value.format + ")").c_str(), value.current, value.min, value.max);
+}
+
 const char* cellSporeTypeAsString(SporeType sporeType) {
 	switch (sporeType) {
 	case SporeType::Empty:
@@ -369,6 +375,17 @@ void DebugUI::render()
 	io.MouseDown[1] = input->mouse.buttons.right;
 
 	ImGui::NewFrame();
+
+	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("Performance", nullptr, ImGuiWindowFlags_None);
+	DisplayPerformanceValue("fps", timing.fps);
+	if (ImGui::CollapsingHeader("Deatils", ImGuiTreeNodeFlags_DefaultOpen)) {
+		DisplayPerformanceValue("cb build", timing.commandbufferbuild);
+		DisplayPerformanceValue("playfield update", timing.playfieldupdate);
+	}
+	ImGui::End();
+
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiSetCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("General info", nullptr, ImGuiWindowFlags_None);
