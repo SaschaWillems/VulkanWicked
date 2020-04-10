@@ -24,7 +24,6 @@ private:
 		float scale;
 	};
 	void updatePortal(Cell* portal, float dT);
-	void updateSpore(Cell& cell, float dT);
 	void getCellsAtDistance(glm::ivec2 pos, uint32_t distance, Cell* cells[], uint32_t& count);
 public:
 	// @todo: make private after restructuring

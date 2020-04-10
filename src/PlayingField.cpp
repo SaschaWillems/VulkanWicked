@@ -65,17 +65,6 @@ void PlayingField::clear()
 	}
 }
 
-void PlayingField::updateSpore(Cell& cell, float dT)
-{
-	if (cell.sporeType == SporeType::Evil_Dead) {
-		cell.floatValue -= dT * gameState->values.evilDeadSporeRessurectionSpeed;
-		if (cell.floatValue <= 0) {
-			// Dead evil spores return to live after a certain amount of time and if not overtaken by good growth
-			cell.sporeType = SporeType::Evil;
-		}
-	}
-}
-
 void PlayingField::updatePortal(Cell* portal, float dT)
 {
 	// Reworked growth functionality based around portals (seems to be what the original is doing)
@@ -137,10 +126,6 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 						}
 						// Skip fully grown spores
 						if (cell->sporeType == sporeType && cell->sporeSize >= SporeSize::Max) {
-							continue;
-						}
-						// Skip temporary disabled/dead evil cells for evil portals
-						if (portal->sporeType == SporeType::Evil_Portal && cell->sporeType == SporeType::Evil_Dead) {
 							continue;
 						}
 						// Check if cell can be reached from portal
@@ -222,6 +207,11 @@ void PlayingField::updatePortal(Cell* portal, float dT)
 			}
 			break;
 		}
+		else if (portal->sporeType == SporeType::Evil_Portal && dstCell->sporeType == SporeType::Evil_Dead) {
+			// Temporary disabled evil cells can be resurrected by an evil portal
+			dstCell->sporeType = SporeType::Evil;
+			break;
+		}
 		else {
 			if (dstCell->canGrow()) {
 				dstCell->grow();
@@ -239,11 +229,6 @@ void PlayingField::update(float dT)
 		for (uint32_t y = 0; y < height; y++) {
 			Cell& cell = cells[x][y];
 			switch (cell.sporeType) {
-			case SporeType::Good:
-			case SporeType::Evil:
-			case SporeType::Evil_Dead:
-				updateSpore(cell, dT);
-				break;
 			case SporeType::Good_Portal:
 			case SporeType::Evil_Portal:
 				updatePortal(&cell, dT);
