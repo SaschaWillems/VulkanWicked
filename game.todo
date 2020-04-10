@@ -1,0 +1,23 @@
+Growth:
+✔ Portal based growth instead of cell based (seems to be what original does) @done(20-04-10 21:25)
+    ✔ Use a growth timer for each portal, based on day/night cycle @done(20-04-10 21:25)
+    ✔ Implement portal growth range with distance-based growth rates @done(20-04-10 21:26)
+    ✔ Don't grow disabled evil cells @done(20-04-10 21:30)
+    ☐ Make sure cell to grow can be reached from portal (has at least one neighbour of same type)
+    ☐ Disabled evil cells don't return automatically but when triggered by portal (seems to be what original does)
+✔ Use fixed spore sizes (original has three) @done(20-04-10 21:24)
+✔ Offset cells on Z-Axis based on neighbours @done(20-04-10 21:25)
+
+Game mechanics:
+☐ Evil portal spawners get stuck and aren't removed from active projectile list    
+☐ Remove portal spawner if not picked up within given time frame
+
+Level file format:
+    ☐ Plain JSON for developement
+    ☐ Maybe encrypt later on
+    File needs to include:
+        ☐ ID of the level (zodiac sign, number)    
+        ☐ Game state settings (only those that differ from default state)
+        ☐ Portals (type, location)
+        ☐ Cells (type, location)
+        ☐ Guardian type
