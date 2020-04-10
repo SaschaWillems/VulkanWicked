@@ -112,6 +112,12 @@ VulkanRenderer::VulkanRenderer()
 		if (args[i] == std::string("-validation")) {
 			settings.validation = true;
 		}
+		if ((args[i] == std::string("-c")) || (args[i] == std::string("--console"))) {
+			settings.console = true;
+		}
+		if ((args[i] == std::string("-d")) || (args[i] == std::string("--debugoverlay"))) {
+			settings.debugoverlay = true;
+		}
 		if (args[i] == std::string("-vsync")) {
 			settings.vsync = true;
 		}
@@ -126,12 +132,16 @@ VulkanRenderer::VulkanRenderer()
 			uint32_t h = strtol(args[i + 1], &numConvPtr, 10);
 			if (numConvPtr != args[i + 1]) { height = h; };
 		}
+		if (args[i] == std::string("--crt")) {
+			settings.crtshader = true;
+		}
 	}
 
+	renderWidth = settings.crtshader ? 320.0f : width;
+	renderHeight = settings.crtshader ? 200.0f : height;
+
 #if defined(_WIN32)
-	// Enable console if validation is active
-	// Debug message callback will output to it
-	if (this->settings.validation)
+	if (this->settings.validation || this->settings.console)
 	{
 		AllocConsole();
 		AttachConsole(GetCurrentProcessId());
@@ -227,6 +237,9 @@ VulkanRenderer::VulkanRenderer()
 
 	// Deferred composition
 	VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &deferredComposition.lightsBuffer, sizeof(lightSources)));
+	lightSources.screenRes = glm::vec2(width, height);
+	lightSources.renderRes = glm::vec2(renderWidth, renderHeight);
+	lightSources.scanlines = settings.crtshader;
 
 	deferredComposition.descriptorSet = new DescriptorSet(device->handle);
 	deferredComposition.descriptorSet->setPool(descriptorPool);
@@ -454,7 +467,7 @@ void VulkanRenderer::setupOffscreenRenderPass()
 	};
 
 	RenderPass* renderPass = addRenderPass("offscreen");
-	renderPass->setDimensions(width, height);
+	renderPass->setDimensions(renderWidth, renderHeight);
 
 	renderPass->addSubpassDescription({
 		0,
@@ -566,16 +579,16 @@ void VulkanRenderer::setupOffscreenRenderPass()
 	renderPass->setDepthStencilClearValue(5, 1.0f, 0);
 	renderPass->create();
 
-	offscreenPass.width = width;
-	offscreenPass.height = height;
+	offscreenPass.width = renderWidth;
+	offscreenPass.height = renderHeight;
 
 	/* Renderpass */
 
 	/* Shared sampler */
 
 	VkSamplerCreateInfo samplerInfo = vks::initializers::samplerCreateInfo();
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
+	samplerInfo.magFilter = VK_FILTER_NEAREST;
+	samplerInfo.minFilter = VK_FILTER_NEAREST;
 	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerInfo.addressModeV = samplerInfo.addressModeU;

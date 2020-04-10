@@ -115,6 +115,9 @@ public:
 	uint32_t width = 1280;
 	uint32_t height = 720;
 
+	uint32_t renderWidth;
+	uint32_t renderHeight;
+
 	VkPipelineCache pipelineCache;
 	DescriptorPool* descriptorPool;
 	Device* device;
@@ -125,9 +128,11 @@ public:
 
 	struct Settings {
 		bool validation = false;
+		bool console = false;
 		bool fullscreen = false;
 		bool vsync = false;
 		bool debugoverlay = false;
+		bool crtshader = false;
 	} settings;
 
 	static std::vector<const char*> args;
@@ -181,12 +186,16 @@ public:
 		glm::vec4 lightDir = glm::vec4(10.0f, 10.0f, 10.0f, 1.0f);
 	} uboShared;
 
+	// @todo: rename
 	struct LightSources {
 		LightSource lights[MAX_NUM_LIGHTS];
 		glm::vec4 viewPos;
+		glm::vec2 screenRes;
+		glm::vec2 renderRes;
 		int32_t numLights;
 		float fade = 0.5f;
 		float desaturate = 0.0f;
+		int32_t scanlines = 0;
 	} lightSources;
 	Buffer lightsSSBO;
 
