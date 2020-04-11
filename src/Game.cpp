@@ -171,6 +171,19 @@ void Game::updateProjectiles(float dT)
 					projectile.remove();
 					continue;
 				}
+				// Player projectiles kill servants
+				bool servantHit = false;
+				for (auto& servant : servants) {
+					if (servant->state == ServantState::Alive && servant->hitTest(projectile.pos)) {
+						servant->remove();
+						servantHit = true;
+						break;
+					}
+				}
+				if (servantHit) {
+					projectile.remove();
+					continue;
+				}
 				// Player projectiles turn evil spores temporarily into dead evil spores that can be taken over by good growth
 				Cell* cell = playingField->cellFromVisualPos(projectile.pos);
 				if (cell && cell->sporeType == SporeType::Evil) {

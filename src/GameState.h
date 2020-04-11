@@ -30,6 +30,7 @@ public:
 	float evilPortalSpawnerSpeed = 12.5f;
 	float evilSpawnerProjectileSize = 0.25f;
 	float evilDeadSporeLife = 1.0f;
+	// @todo: Remove
 	float evilDeadSporeRessurectionSpeed = 0.5f;
 	float playerFiringCooldown = 2.0f;
 	float playerProjectileSpeed = 17.0f;
@@ -41,6 +42,8 @@ public:
 	// Can be changed to adjust difficulty
 	float portalGrowthFactorGood = 1.0f;
 	float portalGrowthFactorEvil = 1.0f;
+	//
+	float servantLifespan = 5.0f;
 };
 
 class GameState

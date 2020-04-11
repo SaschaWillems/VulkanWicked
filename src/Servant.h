@@ -38,7 +38,6 @@ public:
 	float rotationDir = 0.0f;
 	const float accelFactor = 12.5f;
 	const float dragFactor = 1.0f;
-	const float lifespan = 5.0f;
 	float health;
 	float directionChangeTimer = 1.0f;
 	float stateTimer = 0.0f;
@@ -53,5 +52,6 @@ public:
 	void spawn(glm::vec2 spawnPosition);
 	bool hitTest(glm::vec3 pos);
 	bool alive();
+	void remove();
 };
 

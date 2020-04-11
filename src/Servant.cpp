@@ -24,6 +24,9 @@ LightSource Servant::getLightSource()
     if (state == ServantState::Appearing) {
         lightSource.color *= stateTimer;
     }
+    if (state == ServantState::Disappearing) {
+        lightSource.color *= 1.0f - stateTimer;
+    }
     return lightSource;
 }
 
@@ -41,6 +44,12 @@ void Servant::updateGPUResources()
 {
     glm::mat4 mat = glm::translate(glm::mat4(1.0f), position);
     mat = glm::rotate(mat, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    if (state == ServantState::Appearing) {
+        mat = glm::scale(mat, glm::vec3(stateTimer));
+    }
+    if (state == ServantState::Disappearing) {
+        mat = glm::scale(mat, glm::vec3(1.0f - stateTimer));
+    }
     ubo.copyTo(&mat, sizeof(mat));
 }
 
@@ -71,8 +80,9 @@ void Servant::update(float dT)
         }
         break;
     case ServantState::Alive:
-        if (stateTimer >= lifespan) {
+        if (stateTimer >= gameState->values.servantLifespan) {
             state = ServantState::Disappearing;
+            stateTimer = 0.0f;
         }
         break;
     case ServantState::Disappearing:
@@ -172,4 +182,10 @@ bool Servant::hitTest(glm::vec3 pos)
 bool Servant::alive()
 {
     return state != ServantState::Dead;
+}
+
+void Servant::remove()
+{
+    state = ServantState::Disappearing;
+    stateTimer = 0.0f;
 }
