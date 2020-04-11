@@ -19,6 +19,7 @@
 #include "Cell.h"
 #include "Player.h"
 #include "Guardian.h"
+#include "Servant.h"
 #include "UI/GameUI.h"
 
 enum class View { None, Intro, MainMenu, LevelSelection, InGame, GameOver };
@@ -35,10 +36,12 @@ public:
 	float fade = 0.0f;
 	Player* player;
 	Guardian* guardian;
+	std::vector<Servant*> servants;
 	DescriptorSet* descriptorSetProjectiles;
 	bool paused = false;
 	Buffer projectilesUbo;
 	LightSource getPhaseLight();
+	~Game();
 	void spawnTrigger();
 	void update(float dT);
 	void updateProjectiles(float dT);
@@ -46,6 +49,7 @@ public:
 	void updateGPUResources();
 	void spawnPlayer();
 	void spawnGuardian();
+	void spawnServants();
 	void setView(View view, bool fade = true);
 	void loadLevel(const std::string& filename);
 };

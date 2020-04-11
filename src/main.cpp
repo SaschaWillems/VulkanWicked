@@ -21,6 +21,7 @@
 
 #include "Player.h"
 #include "Guardian.h"
+#include "Servant.h"
 #include "PlayingField.h"
 #include "TarotDeck.h"
 
@@ -72,6 +73,11 @@ void init()
 
 	guardian = new Guardian();
 	guardian->setRenderer(renderer);
+	game->servants.resize(8);
+	for (auto& servant : game->servants) {
+		servant = new Servant();
+		servant->setRenderer(renderer);
+	}
 
 	tarotDeck = new TarotDeck();
 	tarotDeck->setRenderer(renderer);
@@ -99,6 +105,7 @@ void init()
 
 	game->spawnPlayer();
 	game->spawnGuardian();
+	game->spawnServants();
 }
 
 void buildCommandBuffer()
@@ -172,6 +179,11 @@ void buildCommandBuffer()
 	tarotDeck->draw(cb);
 	player->draw(cb);
 	guardian->draw(cb);
+	for (auto& servant : game->servants) {
+		if (servant->alive()) {
+			servant->draw(cb);
+		}
+	}
 
 	// Projectiles
 	if (!gameState->projectiles.empty()) {
@@ -252,6 +264,9 @@ int SDL_main(int argc, char* argv[])
 
 	tarotDeck->setState(TarotDeckState::Hidden);
 	guardian->setModel("guardian_black_sun");
+	for (auto& guardianservant : game->servants) {
+		guardianservant->setModel("guardian_01_servant");
+	}
 	tarotDeck->setModel("tarot_card");
 
 	game->prepareGPUResources();
@@ -265,6 +280,9 @@ int SDL_main(int argc, char* argv[])
 	renderer->camera.updateGPUResources();
 	player->updateGPUResources();
 	guardian->updateGPUResources();
+	for (auto& guardianservant : game->servants) {
+		guardianservant->prepareGPUResources();
+	}
 	tarotDeck->updateGPUResources();
 	gameUI->updateGPUResources();
 

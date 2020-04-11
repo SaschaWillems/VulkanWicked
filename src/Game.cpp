@@ -16,6 +16,13 @@ LightSource Game::getPhaseLight()
 	return lightSource;
 }
 
+Game::~Game()
+{
+	for (auto servant : servants) {
+		delete servant;
+	}
+}
+
 void Game::spawnTrigger()
 {
 	if (gameState->phase == Phase::Day) {
@@ -274,6 +281,43 @@ void Game::spawnGuardian()
 		std::cerr << "No spawn point found for guardian, spawning at center" << std::endl;
 	}
 	guardian->spawn(spawnPosition);
+}
+
+void Game::spawnServants()
+{
+	// Get a spot on the playingfield that will fit them all
+	// @todo: Spawn each with slightly randomized position and initial movement vectoes
+	// @todo: Spawn eight henchmen in two rows
+	glm::vec2 spawnPosition = glm::vec2(0.0f);
+	// Guardian spawns at random evil portal
+	std::vector<Cell> spawnPoints;
+	for (uint32_t x = 0; x < playingField->width; x++) {
+		for (uint32_t y = 0; y < playingField->height; y++) {
+			Cell& cell = playingField->cells[x][y];
+			if (cell.sporeType == SporeType::Evil_Portal) {
+				spawnPoints.push_back(cell);
+			}
+		}
+	}
+	if (!spawnPoints.empty()) {
+		int32_t index = randomInt(spawnPoints.size());
+		spawnPosition = spawnPoints[index].gridPos;
+		std::clog << "Spawning guardian at " << spawnPosition.x << " / " << spawnPosition.y << std::endl;
+	}
+	else {
+		std::cerr << "No spawn point found for guardian, spawning at center" << std::endl;
+	}
+	const std::vector<glm::vec2> spawnOffsets = {
+		{-2.0f, -1.0f}, {-1.0f, -2.0f}, {1.0f, -2.0f}, {2.0f, -1.0f},
+		{-2.0f, 1.0f}, {-1.0f, 2.0f}, {1.0f, 2.0f}, {2.0f, 1.0f},
+	};
+	const float spawnScale = 1.25f;
+	glm::vec2 dir_upper = glm::vec2(randomFloat(2.0f) - 1.0f, -randomFloat(1.0f));
+	glm::vec2 dir_lower = glm::vec2(randomFloat(2.0f) - 1.0f, randomFloat(1.0f));
+	for (size_t i = 0; i < servants.size(); i++) {
+		servants[i]->spawn(spawnPosition + spawnOffsets[i] * spawnScale);
+		servants[i]->direction = spawnOffsets[i].y < 0.0f ? dir_upper : dir_lower;
+	}
 }
 
 void Game::setView(View view, bool fade)
