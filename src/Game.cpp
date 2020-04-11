@@ -85,6 +85,11 @@ void Game::update(float dT)
 		}
 	}
 	if (view == View::InGame) {
+		servantSpawnTimer -= 1.0f * dT;
+		if (servantSpawnTimer <= 0.0f) {
+			servantSpawnTimer = gameState->values.servantSpawnRate;
+			spawnServants();
+		}
 		updateProjectiles(dT);
 		updateSpawnTimer(dT);
 		updateState(dT);
@@ -299,27 +304,12 @@ void Game::spawnGuardian()
 void Game::spawnServants()
 {
 	// Get a spot on the playingfield that will fit them all
+	glm::vec2 spawnPosition = glm::vec2(0.0f);
+	spawnPosition.x = gameState->boundingBox.left + randomFloat(gameState->boundingBox.width()) ;
+	spawnPosition.y = gameState->boundingBox.top + randomFloat(gameState->boundingBox.height());
+	spawnPosition *= 0.75f;
 	// @todo: Spawn each with slightly randomized position and initial movement vectoes
 	// @todo: Spawn eight henchmen in two rows
-	glm::vec2 spawnPosition = glm::vec2(0.0f);
-	// Guardian spawns at random evil portal
-	std::vector<Cell> spawnPoints;
-	for (uint32_t x = 0; x < playingField->width; x++) {
-		for (uint32_t y = 0; y < playingField->height; y++) {
-			Cell& cell = playingField->cells[x][y];
-			if (cell.sporeType == SporeType::Evil_Portal) {
-				spawnPoints.push_back(cell);
-			}
-		}
-	}
-	if (!spawnPoints.empty()) {
-		int32_t index = randomInt(spawnPoints.size());
-		spawnPosition = spawnPoints[index].gridPos;
-		std::clog << "Spawning guardian at " << spawnPosition.x << " / " << spawnPosition.y << std::endl;
-	}
-	else {
-		std::cerr << "No spawn point found for guardian, spawning at center" << std::endl;
-	}
 	const std::vector<glm::vec2> spawnOffsets = {
 		{-2.0f, -1.0f}, {-1.0f, -2.0f}, {1.0f, -2.0f}, {2.0f, -1.0f},
 		{-2.0f, 1.0f}, {-1.0f, 2.0f}, {1.0f, 2.0f}, {2.0f, 1.0f},

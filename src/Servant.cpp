@@ -95,7 +95,7 @@ void Servant::update(float dT)
     }
 
     // Randomly change direciton
-    directionChangeTimer -= 2.5f * dT;
+    directionChangeTimer -= 0.5f * dT;
     if (directionChangeTimer <= 0.0f) {
         changeDirection();
         directionChangeTimer = 1.0f;// +randomFloat(1.0f);
@@ -168,6 +168,7 @@ void Servant::spawn(glm::vec2 spawnPosition)
     health = 100.0f;
     position = glm::vec3(spawnPosition.x, -zIndex, spawnPosition.y);
     rotation = glm::vec2(0.0f);
+    velocity = glm::vec2(0.0f);
     directionChangeTimer = 2.5f;
     rotationDir = randomFloat(1.0f) < 0.5f ? -1.0f : 1.0f;
 }
