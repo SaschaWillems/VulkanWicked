@@ -8,10 +8,12 @@
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
-Device::Device(VkPhysicalDevice physicalDevice)
+Device::Device(VkPhysicalDevice physicalDevice, Instance* instance)
 {
 	assert(physicalDevice);
+	assert(instance);
 	this->physicalDevice = physicalDevice;
+	this->instance = instance;
 
 	vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 	vkGetPhysicalDeviceFeatures(physicalDevice, &features);
@@ -235,6 +237,7 @@ VkResult Device::create(VkQueueFlags requestedQueueTypes)
 	VmaAllocatorCreateInfo allocatorInfo{};
 	allocatorInfo.device = handle;
 	allocatorInfo.physicalDevice = physicalDevice;
+	allocatorInfo.instance = instance->handle;
 	vmaCreateAllocator(&allocatorInfo, &vmaAllocator);
 
 	return result;

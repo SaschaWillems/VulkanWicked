@@ -10,12 +10,14 @@
 #include <string>
 #include "vulkan/vulkan.h"
 #include "Buffer.h"
+#include "Instance.h"
 #include "vk_mem_alloc.h"
 
 class Device
 {
 private:
 	VkCommandPool commandPool = VK_NULL_HANDLE;
+	Instance* instance = nullptr;
 	void* pNext = nullptr;
 	std::vector<const char*> enabledExtensions;
 public:
@@ -34,7 +36,7 @@ public:
 		uint32_t compute;
 		uint32_t transfer;
 	} queueFamilyIndices;
-	Device(VkPhysicalDevice physicalDevice);
+	Device(VkPhysicalDevice physicalDevice, Instance* instance);
 	~Device();
 	uint32_t getMemoryType(uint32_t typeBits, VkMemoryPropertyFlags properties, VkBool32* memTypeFound = nullptr);
 	uint32_t getQueueFamilyIndex(VkQueueFlagBits queueFlags);

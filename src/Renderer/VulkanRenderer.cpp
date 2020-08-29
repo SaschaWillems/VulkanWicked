@@ -194,7 +194,7 @@ VulkanRenderer::VulkanRenderer()
 	vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
 
-	device = new Device(physicalDevice);
+	device = new Device(physicalDevice, instance);
 	device->enabledFeatures.samplerAnisotropy = deviceFeatures.samplerAnisotropy;
 	device->enabledFeatures.independentBlend = VK_TRUE;
 	VkResult res = device->create();
