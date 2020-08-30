@@ -22,6 +22,8 @@ private:
 	void* pNext = nullptr;
 	std::vector<const char*> enabledExtensions;
 	std::vector<const char*> enabledLayers;
+	std::vector<std::string> supportedExtensions;
+	std::vector<std::string> supportedLayers;
 public:
 	VkInstance handle = VK_NULL_HANDLE;
 	Instance();

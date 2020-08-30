@@ -73,4 +73,22 @@ void Instance::create()
 	CI.enabledLayerCount = static_cast<uint32_t>(enabledLayers.size());
 	CI.ppEnabledLayerNames = enabledLayers.data();
 	VK_CHECK_RESULT(vkCreateInstance(&CI, nullptr, &handle));
+	// Get available extensions
+	uint32_t extensionCount = 0;
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+	std::vector<VkExtensionProperties> extensions(extensionCount);
+	if (vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data()) == VK_SUCCESS) {
+		for (VkExtensionProperties &extension : extensions) {
+			supportedExtensions.push_back(extension.extensionName);
+		}
+	}
+	// Get available layers
+	uint32_t layerCount;
+	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+	std::vector<VkLayerProperties> instanceLayerProperties(layerCount);
+	if (vkEnumerateInstanceLayerProperties(&layerCount, instanceLayerProperties.data()) == VK_SUCCESS) {
+		for (VkLayerProperties &layer : instanceLayerProperties) {
+			supportedLayers.push_back(layer.layerName);
+		}
+	}
 }
