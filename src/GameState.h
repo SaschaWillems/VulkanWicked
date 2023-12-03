@@ -23,7 +23,8 @@ public:
 	float maxNumEvilPortalSpawners = 3;
 	float growthSpeedFast = 0.25f;
 	float growthSpeedSlow = 0.125f;
-	float phaseDuration = 15.0f;
+	float phaseDurationDay = 15.0f;
+	float phaseDurationNight = 10.0f;
 	float spawnTimer = 1.0f;
 	float goodSpawnerProjectileSize = 0.25f;
 	float evilPortalSpawnerSpawnChance = 0.15f;

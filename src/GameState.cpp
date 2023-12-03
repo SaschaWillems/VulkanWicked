@@ -12,7 +12,7 @@ GameState::GameState()
 {
 	// @todo
 	phase = Phase::Day;
-	phaseTimer = values.phaseDuration;
+	phaseTimer = values.phaseDurationDay;
 	spawnTimer = values.spawnTimer;
 }
 

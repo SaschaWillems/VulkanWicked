@@ -113,9 +113,11 @@ void Game::updateState(float dT)
 		gameState->phaseTimer = gameState->values.phaseDuration;
 		if (gameState->phase == Phase::Day) {
 			gameState->phase = Phase::Night;
+			gameState->phaseTimer = gameState->values.phaseDurationNight;
 		}
 		else {
 			gameState->phase = Phase::Day;
+			gameState->phaseTimer = gameState->values.phaseDurationDay;
 		}
 	}
 }
@@ -360,6 +362,11 @@ void Game::loadLevel(const std::string& filename)
 	is.close();
 	playingField->clear();
 	gameState->clear();
+	if (json.find("settings") != json.end()) {
+		auto settings = json["settings"];
+		gameState->values.phaseDurationDay = settings["phaseDurationDay"];
+		gameState->values.phaseDurationNight = settings["phaseDurationNight"];
+	}
 	if (json.count("portals") > 0) {
 		if (json["portals"].count("good") > 0) {
 			for (auto& pos : json["portals"]["good"]) {

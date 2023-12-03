@@ -1,4 +1,8 @@
 {
+    "settings": {
+        "phaseDurationDay": 15.0,
+        "phaseDurationNight": 5.0
+    },
     "portals": {
         "good": [
             {"x": 3,  "y": 7},
