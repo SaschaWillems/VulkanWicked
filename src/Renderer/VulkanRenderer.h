@@ -1,4 +1,4 @@
-/* Copyright (c) 2020, Sascha Willems
+/* Copyright (c) 2020-2023, Sascha Willems
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -87,7 +87,7 @@ private:
 
 	void createCommandPool();
 	void createPipelineCache();
-	void createFrameBufferImage(FrameBufferAttachment& target, FramebufferType type, VkFormat fmt = VK_FORMAT_UNDEFINED);
+	void createFrameBufferImage(FrameBufferAttachment& target, FramebufferType type, VkFormat fmt = VK_FORMAT_UNDEFINED, const char* name = "");
 	void setupRenderPass();
 
 	void setupOffscreenRenderPass();
@@ -186,8 +186,7 @@ public:
 		glm::vec4 lightDir = glm::vec4(10.0f, 10.0f, 10.0f, 1.0f);
 	} uboShared;
 
-	// @todo: rename
-	struct LightSources {
+	struct DeferredUniformData {
 		LightSource lights[MAX_NUM_LIGHTS];
 		glm::vec4 viewPos;
 		glm::vec2 screenRes;
@@ -196,8 +195,7 @@ public:
 		float fade = 0.5f;
 		float desaturate = 0.0f;
 		int32_t scanlines = 0;
-	} lightSources;
-	Buffer lightsSSBO;
+	} deferredUniformData;
 
 	VulkanRenderer();
 	virtual ~VulkanRenderer();

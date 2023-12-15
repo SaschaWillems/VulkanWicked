@@ -1,4 +1,4 @@
-/* Copyright (c) 2020, Sascha Willems
+/* Copyright (c) 2020-2023, Sascha Willems
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -32,7 +32,7 @@ Device::Device(VkPhysicalDevice physicalDevice, Instance* instance)
 		std::vector<VkExtensionProperties> extensions(extCount);
 		if (vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extCount, &extensions.front()) == VK_SUCCESS)
 		{
-			for (auto ext : extensions)
+			for (auto& ext : extensions)
 			{
 				supportedExtensions.push_back(ext.extensionName);
 			}
@@ -218,6 +218,9 @@ VkResult Device::create(VkQueueFlags requestedQueueTypes)
 		deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
 	}
 
+	deviceExtensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+	deviceExtensions.push_back(VK_KHR_MAINTENANCE3_EXTENSION_NAME);
+
 	if (deviceExtensions.size() > 0)
 	{
 		deviceCreateInfo.enabledExtensionCount = (uint32_t)deviceExtensions.size();
@@ -241,6 +244,19 @@ VkResult Device::create(VkQueueFlags requestedQueueTypes)
 	vmaCreateAllocator(&allocatorInfo, &vmaAllocator);
 
 	return result;
+}
+
+void Device::setDebugObjectName(VkObjectType type, uint64_t handle, const char* name)
+{
+	if (!vks::debug::debugUtilsAvailable) {
+		return;
+	}
+	VkDebugUtilsObjectNameInfoEXT nameInfo{};
+	nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	nameInfo.objectType = type;
+	nameInfo.objectHandle = handle;
+	nameInfo.pObjectName = name;
+	vks::debug::vkSetDebugUtilsObjectNameEXT(this->handle, &nameInfo);
 }
 
 VkResult Device::createBuffer(VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage, Buffer* buffer, VkDeviceSize size, void* data)

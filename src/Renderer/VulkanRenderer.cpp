@@ -1,4 +1,4 @@
-/* Copyright (c) 2020, Sascha Willems
+/* Copyright (c) 2020-2023, Sascha Willems
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -30,6 +30,7 @@ VkResult VulkanRenderer::createInstance(bool enableValidation)
 	{
 		instance->enableExtension(extension);
 	}
+	instance->enableExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 	if (settings.validation)
 	{
 		instance->enableExtension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -137,8 +138,8 @@ VulkanRenderer::VulkanRenderer()
 		}
 	}
 
-	renderWidth = settings.crtshader ? 320.0f : width;
-	renderHeight = settings.crtshader ? 200.0f : height;
+	renderWidth = settings.crtshader ? 320.0f * 2.0f : width;
+	renderHeight = settings.crtshader ? 200.0f * 2.0f : height;
 
 #if defined(_WIN32)
 	if (this->settings.validation || this->settings.console)
@@ -236,10 +237,10 @@ VulkanRenderer::VulkanRenderer()
 	setupDescriptorPool();
 
 	// Deferred composition
-	VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &deferredComposition.lightsBuffer, sizeof(lightSources)));
-	lightSources.screenRes = glm::vec2(width, height);
-	lightSources.renderRes = glm::vec2(renderWidth, renderHeight);
-	lightSources.scanlines = settings.crtshader;
+	VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &deferredComposition.lightsBuffer, sizeof(deferredUniformData)));
+	deferredUniformData.screenRes = glm::vec2(width, height);
+	deferredUniformData.renderRes = glm::vec2(renderWidth, renderHeight);
+	deferredUniformData.scanlines = settings.crtshader;
 
 	deferredComposition.descriptorSet = new DescriptorSet(device->handle);
 	deferredComposition.descriptorSet->setPool(descriptorPool);
@@ -346,7 +347,7 @@ void VulkanRenderer::setupFrameBuffer()
 	}
 }
 
-void VulkanRenderer::createFrameBufferImage(FrameBufferAttachment& target, FramebufferType type, VkFormat fmt)
+void VulkanRenderer::createFrameBufferImage(FrameBufferAttachment& target, FramebufferType type, VkFormat fmt, const char* name)
 {
 	VkFormat format = VK_FORMAT_UNDEFINED;
 	VkImageAspectFlags aspectMask;
@@ -381,6 +382,11 @@ void VulkanRenderer::createFrameBufferImage(FrameBufferAttachment& target, Frame
 	target.view->create();
 
 	target.descriptor = { offscreenPass.sampler, target.view->handle, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+
+	if ((name != "") && (vks::debug::debugUtilsAvailable)) {
+		device->setDebugObjectName(VK_OBJECT_TYPE_IMAGE, (uint64_t)target.image->handle, name);
+		device->setDebugObjectName(VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)target.view->handle, name);
+	}
 }
 
 void VulkanRenderer::setupRenderPass()
@@ -601,12 +607,12 @@ void VulkanRenderer::setupOffscreenRenderPass()
 	VK_CHECK_RESULT(vkCreateSampler(device->handle, &samplerInfo, nullptr, &offscreenPass.sampler));
 
 	/* Framebuffer images */
-	createFrameBufferImage(offscreenPass.position, FramebufferType::Color, VK_FORMAT_R16G16B16A16_SFLOAT);
-	createFrameBufferImage(offscreenPass.normal, FramebufferType::Color, VK_FORMAT_R16G16B16A16_SFLOAT);
-	createFrameBufferImage(offscreenPass.albedo, FramebufferType::Color, VK_FORMAT_R8G8B8A8_UNORM);
-	createFrameBufferImage(offscreenPass.material, FramebufferType::Color, VK_FORMAT_R8_UINT);
-	createFrameBufferImage(offscreenPass.pbr, FramebufferType::Color, VK_FORMAT_R8G8B8A8_UNORM);
-	createFrameBufferImage(offscreenPass.depth, FramebufferType::DepthStencil, fbDepthFormat);
+	createFrameBufferImage(offscreenPass.position, FramebufferType::Color, VK_FORMAT_R16G16B16A16_SFLOAT, "G-Buffer positions");
+	createFrameBufferImage(offscreenPass.normal, FramebufferType::Color, VK_FORMAT_R16G16B16A16_SFLOAT, "G-Buffer normals");
+	createFrameBufferImage(offscreenPass.albedo, FramebufferType::Color, VK_FORMAT_R8G8B8A8_UNORM, "G-Buffer albedo");
+	createFrameBufferImage(offscreenPass.material, FramebufferType::Color, VK_FORMAT_R8_UINT, "G-Buffer materials");
+	createFrameBufferImage(offscreenPass.pbr, FramebufferType::Color, VK_FORMAT_R8G8B8A8_UNORM, "G-Buffer pbr values");
+	createFrameBufferImage(offscreenPass.depth, FramebufferType::DepthStencil, fbDepthFormat, "G-Buffer depth");
 
 	/* Framebuffers */
 
@@ -739,8 +745,8 @@ void VulkanRenderer::windowResize()
 }
 
 void VulkanRenderer::addLight(LightSource lightSource) {
-	lightSources.lights[lightSources.numLights] = lightSource;
-	lightSources.numLights++;
+	deferredUniformData.lights[deferredUniformData.numLights] = lightSource;
+	deferredUniformData.numLights++;
 }
 
 PipelineLayout* VulkanRenderer::addPipelineLayout(std::string name)
@@ -825,7 +831,7 @@ VkFormat formatEnum(const std::string& value)
 Pipeline* VulkanRenderer::loadPipelineFromFile(std::string filename)
 {
 	std::clog << "Loading pipeline from \"" << filename << "\"" << std::endl;
-	std::ifstream is(assetManager->assetPath + filename);
+	std::ifstream is(filename);
 	if (!is.is_open())
 	{
 		std::cerr << "Error: Could not open pipeline definition file \"" << filename << "\"" << std::endl;
